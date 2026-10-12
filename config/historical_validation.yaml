@@ -1,0 +1,83 @@
+validation_phase: historical
+baseline_commit: cfe1f938b41475d20d4c98cdbc78b24102eac676
+max_phase: 1
+product: TXF
+contractMonth: 1!
+session: regular
+timeframe: 1
+fields: open,high,low,close,volume,average
+sort: asc
+recent_session_count: 5
+publication_safety_delay_minutes: 60
+calendar_file: config/historical_session_calendar.csv
+canonical_intraday_run: 20261013_051100_cfe1f938b414
+canonical_documentation_sha256: bb778f2a47e509efa4c2eb9cdf45b6dd52a657b19da0e2680373157aaa78e7c6
+concrete_contract:
+  contractMonth: '202610'
+  expected_symbol: null
+  expected_valid_from: '2026-09-17'
+  expected_valid_to: '2026-10-20'
+  validity_basis: configured recent verification window; must verify against observed
+    contract metadata
+rollover:
+  from: '2026-09-10'
+  to: '2026-09-22'
+  old_contract: '202609'
+  new_contract: '202610'
+  expiry_date: '2026-09-16'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&end_month=09&end_year=2026&start_month=09&start_year=2025
+  aliases:
+  - 1!
+repeat_phase1: true
+cross_year_samples:
+- year: 2026
+  dates:
+  - '2026-06-01'
+  - '2026-06-02'
+  - '2026-06-03'
+  - '2026-06-04'
+  - '2026-06-05'
+- year: 2025
+  dates:
+  - '2025-06-02'
+  - '2025-06-03'
+  - '2025-06-04'
+  - '2025-06-05'
+  - '2025-06-06'
+- year: 2024
+  dates:
+  - '2024-06-03'
+  - '2024-06-04'
+  - '2024-06-05'
+  - '2024-06-06'
+  - '2024-06-07'
+- year: 2022
+  dates:
+  - '2022-06-06'
+  - '2022-06-07'
+  - '2022-06-08'
+  - '2022-06-09'
+  - '2022-06-10'
+- year: 2020
+  dates:
+  - '2020-06-01'
+  - '2020-06-02'
+  - '2020-06-03'
+  - '2020-06-04'
+  - '2020-06-05'
+- year: 2018
+  dates:
+  - '2018-06-04'
+  - '2018-06-05'
+  - '2018-06-06'
+  - '2018-06-07'
+  - '2018-06-08'
+- year: 2017
+  dates:
+  - '2017-06-01'
+  - '2017-06-02'
+  - '2017-06-05'
+  - '2017-06-06'
+  - '2017-06-07'
+external_reference_csv: null
+external_reference_source: null

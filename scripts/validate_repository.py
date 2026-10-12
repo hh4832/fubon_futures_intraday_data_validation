@@ -8,13 +8,19 @@ import nbformat
 
 ROOT=Path(__file__).resolve().parents[1]
 errors=[]
-nb=nbformat.read(ROOT/'notebooks/validate_fubon_futures_intraday.ipynb',as_version=4)
-nbformat.validate(nb)
-code_cells=[c for c in nb.cells if c.cell_type=='code']
-assert len(code_cells)==25
-for i,cell in enumerate(code_cells):
-    ast.parse(cell.source,filename=f'notebook cell {i+1}')
-    assert cell.execution_count is None and not cell.outputs
+code_cells=[]
+for notebook in sorted((ROOT/'notebooks').glob('*.ipynb')):
+    nb=nbformat.read(notebook,as_version=4)
+    nbformat.validate(nb)
+    notebook_cells=[c for c in nb.cells if c.cell_type=='code']
+    if notebook.name=='validate_fubon_futures_intraday.ipynb':
+        assert len(notebook_cells)==25
+    elif notebook.name=='validate_fubon_futures_historical.ipynb':
+        assert 'MAX_PHASE = 1' in '\n'.join(c.source for c in notebook_cells)
+    for i,cell in enumerate(notebook_cells):
+        ast.parse(cell.source,filename=f'{notebook.name} cell {i+1}')
+        assert cell.execution_count is None and not cell.outputs
+    code_cells.extend(notebook_cells)
 texts=[]
 for path in [*ROOT.glob('src/*.py'),*ROOT.glob('scripts/*.py'),*ROOT.glob('tests/*.py')]:
     text=path.read_text()
@@ -44,4 +50,4 @@ assert 'https://github.com/hh4832/fubon_futures_intraday_data_validation.git' in
 config=(ROOT/'config/validation_config.yaml').read_text()
 assert '/content/drive/MyDrive/00Quant_Research/fubon_futures_intraday_data_validation' in config
 if errors:raise RuntimeError('\n'.join(errors))
-print('PASS: Notebook JSON, 25 code cells, syntax, local imports, output-free cells, paths, read-only operations, credential/binary scan')
+print('PASS: Both Notebook JSON files, intraday 25 code cells, syntax, local imports, output-free cells, paths, read-only operations, credential/binary scan')

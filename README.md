@@ -120,3 +120,90 @@ python scripts/validate_repository.py
 ```
 
 測試不 import 富邦 SDK；不需要 credential。真實 SDK 安裝、登入、合約及資料仍需使用者在 Colab 驗證。
+
+## Historical Candles Validation
+
+已有 canonical initial intraday validation：SDK 2.4.0、API Key login 與 TXF 日夜盤行情可用；
+canonical run 為 `20261013_051100_cfe1f938b414`。本分支不改寫 intraday baseline 或其 outputs。
+注意 canonical run 的 `account_types=[stock]`、`futopt_account=false`，但 futures market-data call 成功；
+行情存取成功不代表登入 response 出現 futures trading account。
+
+Historical validation **≠ strategy validation**。新 phase 驗證跨日/年 coverage、cross-endpoint consistency、
+實際 contractMonth、單一 rollover window、夜盤歸屬與跨年度固定樣本；不建立正式回測資料庫。
+
+### 使用方式
+
+- 分支：`feature/historical-candles-validation`，Notebook：`notebooks/validate_fubon_futures_historical.ipynb`。
+- 同樣使用四個 Colab Secrets 與私人 Drive 憑證，Notebook 以獨立 clone directory 保留原 intraday checkout。
+- **預設 `MAX_PHASE=1`**，先查最近五個已完整結束的 regular 1! / 1m sessions，重複查一次檢查可重現性。
+- 確認最小 sample 結果後可在 Notebook 設定 `MAX_PHASE=2..7`；每次 run 仍從 Phase 1 重新依序 gating，不跳步。
+- FAIL 或 UNRESOLVED 阻擋後續；PASS WITH CAVEATS 可繼續且保留 caveat。
+- 每次建立新的時間戳 archive；正式 run 必須 clean Git，尚未提交的開發版本不執行 formal run。
+
+| Phase | 驗證 |
+|---|---|
+| 0 | Environment / Git / authentication / canonical documentation |
+| 1 | Historical 1! regular 1m，最近 5 完整 sessions，重複查詢 |
+| 2 | 同一 discovered actual contract、完整交易日的 historical vs intraday |
+| 3 | 小段具體 `202610` contractMonth 與 1! 比對 |
+| 4 | `2026-09-10..22` 單一 rollover；1!、202609、202610 |
+| 5 | 最近 5 完整夜盤，並在相同 rollover window 比較 session transition |
+| 6 | regular / afterhours 1m vs 5/15/60m，逐交易日分桶 |
+| 7 | 固定 2026/2025/2024/2022/2020/2018/2017 小樣本 |
+
+### Historical API 依據與限制
+
+先讀 canonical run 的 `diagnostics/official_historical_documentation.txt`；預期 SHA256 記在 historical config。
+缺檔或 hash 改變時停止，不重新發明 API 參數。文件來自使用者已保存的 official archive。
+本次開發已用官方 SDK 2.4.0 實際 introspect dependency implementation，method 為 `candles(self, **params)`。
+formal run 仍對實際登入後 historical client 重新 introspect，寫入 `historical_callable.txt`。
+安全 object repr 不輸出 client 內部 auth configuration。
+
+官方文件明載 `product / contractMonth / from / to / timeframe / session / fields / sort`。
+Historical top metadata 與 intraday 不同，不會把 intraday schema 套用到 historical。
+每根 K 線 `contractMonth` 保存 actual month；query `1!` 與 actual month 分開，不自行猜 actual symbol。
+文件說 historical average 是每根 K 線 volume-weighted price，程式將此列 **Documented fact**；
+實際 identity/reset semantics 仍保留 **Unresolved**，不假定等於 intraday average。
+
+Phase 2 用 intraday discovery 的 settlementDate 對應實際月份與 symbol，沒有可靠 identity 就停止後續。
+若 intraday 已切至新交易日，而 historical sample 僅含之前完整日期，overlap 標 UNRESOLVED，
+不把無重疊、未知參數被忽略或相同 provider 自洽當作外部驗證。
+
+Rollover 每根用 raw OHLCV＋observed month metadata 比對，雙合約同價視為 ambiguity；
+`100,101,103,104` 支持 sampled raw concatenation，`102,103,103,104` 僅標 transformed / requires further inference。
+不據單一窗口直接證明 expiry-trigger vs volume-trigger 的通用規則；no adjustment 只針對取樣 segment。
+`2!` / `3!` 僅支援介面與文件參數，本輪不取樣，結論保持未驗證。
+
+### 交易日與 fixed samples
+
+`config/historical_session_calendar.csv` 是具來源的 scoped scheduled reference，涵蓋 2026-09-10 至 2026-10-30。
+日期依 TAIFEX 2026 calendar 與 9/25、9/28、10/9、10/26 休市；night windows 依前一 scheduled regular date。
+未額外涵蓋臨時停市；calendar 超出範圍會明確停止，必須先更新來源，不可自動假設 weekday 都交易。
+完整 session 除結束時間外加 60 分鐘 conservative publication delay，這是 **Inference**，不是官方更新時刻。
+到期短 session 及 window 邊界異常保持 caveat，reference missing_slot_count 不等於確認資料缺漏。
+
+cross-year dates 在 `config/historical_validation.yaml` 固定：每年 5 個日期，2017 從 6/1 起。
+早期年月樣本未有完整、獨立交易日表，calendar/source uncertainty 在 coverage 保留 caveat；
+不能遇缺資料就換日，也不能據固定六月樣本宣稱全季節穩定。未來擴展 calendar 需另行驗證。
+
+### 新增輸出
+
+除原有 raw/data/run_info 外，保存：
+
+- `historical_callable.txt`、canonical documentation 與 calendar snapshot。
+- `historical_schema_validation.csv`、`historical_ohlc_validation.csv`。
+- `historical_timestamp_validation.csv`、`historical_session_validation.csv`、`historical_daily_coverage.csv`。
+- `historical_api_requests.csv`、`historical_performance.csv`、`historical_stages.csv`。
+- `historical_repeatability.csv`、`historical_vs_intraday_overlap.csv`、`historical_vs_intraday_summary.csv`。
+- `concrete_vs_continuous.csv`、`rollover_mapping.csv`、`rollover_semantics.csv`。
+- `historical_afterhours_validation.csv`、night rollover mapping、session comparison。
+- `historical_aggregation_validation.csv`、`cross_year_coverage.csv`。
+- `historical_average_validation.csv`；average unclear 不會偽裝成 VWAP empirical proof。
+- `historical_external_validation.csv`：預設 `NOT PERFORMED`；外部 minute reference 可指定 CSV＋可追溯 source，
+  欄位為 timezone-aware timestamp、actual_contract_month、OHLC、volume、average，程式保留 exact comparison interface。
+- `validation_summary.md/.txt`：A–Q 問題、四類 evidence、PASS/PASS WITH CAVEATS/FAIL/UNRESOLVED 與研究結論。
+
+新增模組：`historical_client.py`、`historical_normalization.py`、`historical_validation.py`、
+`historical_overlap.py`、`rollover_validation.py`、`historical_runner.py`。
+重用現有登入、官方 installer、retry/raw writer、archive、OHLC/time/aggregation primitives。
+開發完成仍不代表 live historical API 成功；沒有憑證時僅執行 synthetic tests。

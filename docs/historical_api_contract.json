@@ -1,0 +1,38 @@
+{
+  "sdk_version": "2.4.0",
+  "local_introspection": "fugle_marketdata.rest.futopt.historical.Historical.candles(self, **params)",
+  "documentation_archive": "20261013_051100_cfe1f938b414/diagnostics/official_historical_documentation.txt",
+  "documentation_sha256": "bb778f2a47e509efa4c2eb9cdf45b6dd52a657b19da0e2680373157aaa78e7c6",
+  "parameters": [
+    "product",
+    "contractMonth",
+    "from",
+    "to",
+    "timeframe",
+    "session",
+    "fields",
+    "sort"
+  ],
+  "top_required": [
+    "product",
+    "contractMonth",
+    "exchange",
+    "session",
+    "timeframe",
+    "sort",
+    "data"
+  ],
+  "bar_required": [
+    "date",
+    "contractMonth"
+  ],
+  "documented_facts": {
+    "rollover": "expiry-based; switches next trading day; actual month per bar",
+    "adjustment": "no roll price adjustment",
+    "minute_start": "2017-06",
+    "range": "less than one year",
+    "average": "documented per-bar volume-weighted price; empirical identity still unverified",
+    "volume": "outright trades only; combination legs/block trades excluded"
+  },
+  "live_historical_test": "NOT PERFORMED"
+}
