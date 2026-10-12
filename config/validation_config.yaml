@@ -1,0 +1,18 @@
+timezone: Asia/Taipei
+sdk_version: 2.4.0
+sdk_download_url: https://www.fbs.com.tw/TradeAPI_SDK/fubon_binary/fubon_neo-2.4.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.zip
+sdk_official_sha256: null
+repository: https://github.com/hh4832/fubon_futures_intraday_data_validation.git
+drive_root: /content/drive/MyDrive/00Quant_Research/fubon_futures_intraday_data_validation
+sessions: [regular, afterhours]
+timeframes: [1, 5, 15, 60]
+max_attempts: 3
+backoff_seconds: 1
+request_spacing_seconds: 1
+historical_probe_enabled: true
+selected_symbol: null
+aggregation_price_atol: 0.000001
+aggregation_volume_atol: 0
+session_expectations:
+  regular: [08:45, '13:45']
+  afterhours: ['15:00', '05:00']
