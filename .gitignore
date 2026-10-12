@@ -18,3 +18,6 @@ outputs/*
 !outputs/.gitkeep
 *.parquet
 raw/
+
+# Fubon SDK runtime logs
+log/
