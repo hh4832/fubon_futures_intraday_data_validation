@@ -27,3 +27,12 @@ Exact OHLC/volume comparison 不允許 tolerance；adjustment-model tolerance �
 不得用 missing expired-contract volume=0 判定 crossover；空缺保持 NaN。
 重複 timestamp 不得 silent drop；comparison projection 可排除 ambiguous reference keys，但 raw/data/anomalies 必須完整保留。
 Observed transition、expiry/volume consistency 與 provider rule proof 必須分開；單一窗口不授權多年 returns。
+
+## Independent robustness phase
+最新 robustness 入口只查六個事先固定 rollover windows × regular/afterhours × 1!/old/new，共 36 個 logical historical.candles requests；1m only。
+樣本/expiry/window/calendar 事前固定、有官方來源，不因結果改換；保留 calendar_date 與 mapped trade_date。
+不呼叫既有 phase runners；沿用 auth、bounded retry、raw archive 與 exact matching helpers。
+分開統計 active underlying 與 inactive 月份缺分鐘；schedule absence 不是 confirmed loss，active asymmetric gap 阻擋 promotion。
+未解釋的 partial-session mixing、缺失 identity、OHLC transformation 或不可重建 boundary 阻擋。
+所有 sampled construction operationally traceable 可保留／進另行 final integrity validation；不要求識別私有演算法名稱。
+此六窗口結論不可外推全歷史，不執行 final integrity、external price validation、策略或 returns。

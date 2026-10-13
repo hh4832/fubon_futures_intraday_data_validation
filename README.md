@@ -258,3 +258,17 @@ Git commit、window、old/new/continuous contract、expiry、requests/errors；�
 `validation_summary.md/.txt` 回答 A–P 問題、列出反對者觀點與 evidence labels。
 
 開發測試不使用 credentials。Live rollover 尚待 Colab 執行；mechanism 不清楚時結論為「修改後再測」。
+
+## Rollover Robustness + Night Session Validation
+
+Colab 入口：[validate_fubon_futures_rollover_robustness.ipynb](https://colab.research.google.com/github/hh4832/fubon_futures_intraday_data_validation/blob/feature/rollover-robustness-validation/notebooks/validate_fubon_futures_rollover_robustness.ipynb)。使用 clean `feature/rollover-robustness-validation` branch；Python 3.11、SDK/auth/Drive 設定沿用既有流程。
+
+獨立 `src.rollover_robustness.run_rollover_robustness` 只執行 36 組 sequential historical 1m requests（最多各 3 attempts），沒有 intraday、higher timeframe、phase 1→7 或 final cross-year 執行。六個不可依結果變更的樣本、官方 expiry metadata 與四個交易日前後窗口在 `config/rollover_robustness_validation.yaml`；具來源 session windows 在 `config/rollover_robustness_session_calendar.csv`。來源與限制見 [calendar metadata](docs/rollover_robustness_metadata.md)。
+
+輸出至既有 Drive root 下新建的 Asia/Taipei `YYYYMMDD_HHMMSS_commit`；包含每組 raw attempts、完整 normalized parquet、13 組要求的 CSV，另存夜盤逐筆 mapping/coverage/identity transition、input validation、calendar snapshot、performance 與 A–R/15 問 summaries。`run_info` 分開 logical requests 與實際 retry attempts；認證/時間/schema fatal error 停止並留下安全診斷，未完成樣本不得通過。
+
+OHLC/volume exact match 無 tolerance；average mismatch 獨立呈現。Adjustment tolerances 只用於 offset/ratio 診斷，不改資料。夜盤 trade_date 依官方「次一一般交易時段」規則與明列 windows 映射，保留 session_start_calendar_date，避免把 9/16 15:00 的夜盤誤稱 regular trade_date 9/16。Partial/intraday/cross-midnight switch 都會顯示並阻擋未解釋混約。
+
+缺分鐘表按 sample/session/trade_date/query/underlying role 分開；inactive gaps 不影響 `1!` 評級。具 active reference bar 而 `1!` 缺 bar（或相反）為 unresolved blocker；雙方相同的 scheduled-slot absence 是未確認 no-trade/provider omission 的 caveat，不自稱已確認資料遺失。每個 requested session 完全空白則阻擋。到期月 regular reference 13:30 結束，其他月份 13:45；特殊 13:45 bar 保留，不固定要求 300 bars。
+
+六個樣本 raw construction 都可追溯且無 blockers，可判 `PASS WITH CAVEATS` / `保留`，私有 trigger 名稱未知不構成 blocker。Regular/night 邊界不同要明確呈現，不能預設一致；volume 只反證 simple observed minute-volume-max，expiry alignment 不是 universal rule proof。這不驗證 2017–2026 全歷史；external validation 明列 `NOT PERFORMED`。下一階段需另行執行，roll_gap_return 僅為 transition gap，不是市場報酬。

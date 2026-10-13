@@ -21,6 +21,11 @@ for notebook in sorted((ROOT/'notebooks').glob('*.ipynb')):
         sources='\n'.join(c.source for c in notebook_cells)
         assert 'run_rollover(' in sources and 'MAX_PHASE' not in sources
         assert 'feature/continuous-contract-rollover-validation' in sources
+    elif notebook.name=='validate_fubon_futures_rollover_robustness.ipynb':
+        sources='\n'.join(c.source for c in notebook_cells)
+        assert 'run_rollover_robustness(' in sources and 'MAX_PHASE' not in sources
+        assert 'feature/rollover-robustness-validation' in sources
+        assert 'cfg["window_from"]' not in sources and 'cfg["session"]' not in sources
     for i,cell in enumerate(notebook_cells):
         ast.parse(cell.source,filename=f'{notebook.name} cell {i+1}')
         assert cell.execution_count is None and not cell.outputs
