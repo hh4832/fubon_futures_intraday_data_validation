@@ -27,25 +27,44 @@ def normalize_historical(item, calendar):
     df['response_contractMonth'] = response.get('contractMonth')
     df['response_session'] = response.get('session')
     df['timestamp_bucket_definition'] = 'Documented fact: start timestamp; empirical alignment checked separately'
+    df['terminal_boundary_bar'] = False
     if params['session']=='regular':
         df['trade_date'] = df.calendar_date
         df['trade_date_evidence'] = 'Inference: regular calendar date; verify against requested dates / session window'
     else:
-        # Map to explicitly sourced session windows; midnight/weekends/holidays are not +1 calendar day.
-        cal = calendar.sort_values('afterhours_open')
-        starts = pd.DatetimeIndex(cal.afterhours_open).tz_convert('Asia/Taipei')
-        ends = pd.DatetimeIndex(cal.afterhours_close).tz_convert('Asia/Taipei')
-        idx = pd.IntervalIndex.from_arrays(starts,ends,closed='left')
-        if idx.is_overlapping:
-            raise HistoricalFatalError('Overlapping night session calendar')
-        positions = idx.get_indexer(pd.DatetimeIndex(df.timestamp)) if len(df) else np.array([],dtype=int)
-        lookup = cal.trade_date.to_numpy()
-        values = np.full(len(df),None,dtype=object)
-        matched = positions>=0
-        values[matched]=lookup[positions[matched]]
-        df['trade_date'] = pd.Series(values,index=df.index,dtype='string')
-        df['trade_date_evidence'] = 'Inference: sourced scheduled calendar session windows; API per-bar trade date not assumed'
+        df = map_afterhours_trade_dates(df, calendar)
     if 'raw_trade_date' in df:
         df['provider_trade_date'] = df.raw_trade_date
         df['provider_trade_date_matches_mapping'] = df.provider_trade_date.astype('string').eq(df.trade_date.astype('string'))
     return df.sort_values('timestamp',kind='stable').reset_index(drop=True)
+
+
+def map_afterhours_trade_dates(frame, calendar):
+    """Normal [open, close); exact close is a labelled provider terminal bar.
+
+    No timestamp/value edits. Shared/ambiguous boundaries fail rather than guess.
+    This policy does not establish closing-auction semantics.
+    """
+    df=frame.copy()
+    cal=calendar.sort_values('afterhours_open')
+    starts=pd.DatetimeIndex(cal.afterhours_open).tz_convert('Asia/Taipei')
+    ends=pd.DatetimeIndex(cal.afterhours_close).tz_convert('Asia/Taipei')
+    idx=pd.IntervalIndex.from_arrays(starts,ends,closed='left')
+    if idx.is_overlapping or ends.has_duplicates:
+        raise HistoricalFatalError('Ambiguous night session calendar')
+    timestamps=pd.DatetimeIndex(df.timestamp)
+    positions=idx.get_indexer(timestamps) if len(df) else np.array([],dtype=int)
+    terminal_positions=ends.get_indexer(timestamps) if len(df) else np.array([],dtype=int)
+    terminal=terminal_positions>=0
+    if ((positions>=0) & terminal & (positions!=terminal_positions)).any():
+        raise HistoricalFatalError('Terminal boundary overlaps a different night session')
+    positions[terminal]=terminal_positions[terminal]
+    values=np.full(len(df),None,dtype=object)
+    matched=positions>=0
+    values[matched]=cal.trade_date.to_numpy()[positions[matched]]
+    df['trade_date']=pd.Series(values,index=df.index,dtype='string')
+    df['terminal_boundary_bar']=terminal
+    df['trade_date_evidence']='Inference: sourced night windows; exact scheduled close mapped as provider terminal boundary, not proof of closing auction'
+    if 'provider_trade_date' in df:
+        df['provider_trade_date_matches_mapping']=df.provider_trade_date.astype('string').eq(df.trade_date)
+    return df

@@ -290,3 +290,9 @@ output, replay_info = replay_archive(
 Notebook 已加入 pytest → archive replay → `run_first_regular_smoke` 的 gates。Smoke 只查既定 202606→202607 regular 三組原始查詢，保留 raw/data/diagnostics，寫入另一個新的 archive 並標示 `rollover_robustness_smoke`。只有全部 gates 通過，才另建 36-request formal archive；STOPPED archive 不覆寫或重用。
 
 Fatal handling 現在保留 `diagnostics/fatal_traceback.txt`、`fatal_error_type` 與遮蔽敏感值後的 `fatal_error_message`，並 `raise ... from exc` 保留 cause。Traceback 不 dump locals，不將 SDK credentials/account values 寫入輸出。
+
+### Afterhours terminal close boundary
+
+Afterhours 普通 bar 仍用 `[afterhours_open, afterhours_close)`；只有 `timestamp == afterhours_close` 另行歸屬同一已來源確認的 night window，標記 `terminal_boundary_bar=True`，trade_date沿用該window的next regular trade_date。05:01、其他未排程close及開盤前資料不納入；若close同時是另一session的open則停止，避免猜測。Regular/intraday policy不改，raw timestamp/OHLCVA/identity不改，不補資料或刪bars。這是historical provider terminal timestamp歸屬，並不證實closing auction。
+
+`python -m scripts.replay_terminal_boundary --archive EXISTING_ARCHIVE --output NEW_REPLAY_DIR` 僅讀202512→202601 night三份既存parquet及canonical snapshots，另存 `diagnostics/terminal_boundary_replay.csv`、`diagnostics/terminal_boundary_volume_reconciliation.csv`、`terminal_boundary_summary.md`、input validation與replay diagnostics。檢查逐barexact comparisons、adjustment/rule interpretations、transition boundaries不变；用其他五sample已存diagnostics重評aggregate，不宣稱重新執行全部formal run。原archive不可覆寫；API calls=0。

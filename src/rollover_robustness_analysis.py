@@ -58,6 +58,8 @@ def analyze_session(frames, cfg, calendar, session):
     coverage = contract_coverage(continuous, cfg, cfg['trade_dates']).rename(columns={
         'contains_202609':'contains_old_contract', 'contains_202610':'contains_new_contract'})
     mapping = build_mapping(continuous, frames[cfg['old_contract']], frames[cfg['new_contract']], cfg)
+    terminal=continuous.get('terminal_boundary_bar',pd.Series(False,index=continuous.index))
+    mapping['terminal_boundary_bar']=mapping.timestamp.isin(continuous.loc[terminal,'timestamp'])
     mapping['calendar_date'] = mapping.timestamp.dt.strftime('%Y-%m-%d')
     mapping['actual_contract_month'] = mapping.continuous_actual_contract_month
     previous = mapping.continuous_actual_contract_month.shift()
@@ -88,6 +90,14 @@ def analyze_session(frames, cfg, calendar, session):
     anomalies = anomaly_rows(frames, mapping, coverage, cfg).rename(columns={'query':'contract_query'})
     extra = []
     for query, frame in frames.items():
+        if session=='afterhours':
+            terminal=frame.get('terminal_boundary_bar',pd.Series(False,index=frame.index))
+            if terminal.any():
+                rows=frame.loc[terminal,['timestamp','trade_date']].copy()
+                rows['contract_query']=query;rows['anomaly_type']='terminal_boundary_bar'
+                rows['evidence_type']='Observed fact / Inference'
+                rows['notes']='exact scheduled afterhours close retained and assigned; not proof of closing auction'
+                extra.append(rows)
         special = frame[frame.timestamp.dt.strftime('%H:%M').eq('13:45')]
         if session == 'regular' and len(special):
             table = special[['timestamp','trade_date']].copy()

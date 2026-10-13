@@ -14,6 +14,7 @@ from src.archive import git_info
 from src.diagnostics import write_table
 from src.fatal_diagnostics import redact_sensitive_text
 from src.historical_client import HistoricalFatalError, session_calendar
+from src.historical_normalization import map_afterhours_trade_dates
 from src.rollover_robustness import validate_scope
 from src.rollover_robustness_analysis import analyze_session
 
@@ -52,6 +53,8 @@ def replay_archive(archive, output, sample_id='202606_202607', session='regular'
         input_sha256={name:hashlib.sha256(p.read_bytes()).hexdigest() for name,p in files.items()},
         row_counts={q:len(f) for q,f in frames.items()},replay_code=git_info(Path(__file__).resolve().parents[1]))
     try:
+        if session=='afterhours':
+            frames={q:map_afterhours_trade_dates(frame,cal) for q,frame in frames.items()}
         tables,quality=analyze_session(frames,dict(cfg,**sample),cal,session)
         for name,table in tables.items():
             write_table(output,'replay_'+name,table.to_dict('records'),list(table.columns))

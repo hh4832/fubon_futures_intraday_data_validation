@@ -217,7 +217,7 @@ def run_rollover_robustness(rest,root,sdk_info,auth_info,cfg=None):
                     invalid.to_parquet(path/'diagnostics'/f"{item['name']}_invalid_ohlc_rows.parquet",index=False)
                     scoped=frame[['trade_date','timestamp']].merge(cal[['trade_date',session+'_open',session+'_close']],on='trade_date',how='left',validate='many_to_one')
                     outside=scoped[session+'_open'].isna() | scoped.timestamp.lt(scoped[session+'_open']) | scoped.timestamp.gt(scoped[session+'_close'])
-                    if session=='afterhours':outside|=scoped.timestamp.eq(scoped[session+'_close'])
+                    if session=='afterhours':outside|=scoped.timestamp.eq(scoped[session+'_close']) & ~frame.terminal_boundary_bar.to_numpy()
                     provider_conflict='provider_trade_date_matches_mapping' in frame and not frame.provider_trade_date_matches_mapping.fillna(False).all()
                     q='UNRESOLVED' if failed else 'FAIL' if schema['schema_status']=='FAIL' or ohlc['status']=='FAIL' else 'UNRESOLVED' if outside.any() or provider_conflict or frame.empty and query!=sample['old_contract'] else 'PASS'
                     input_quality.append(q)
