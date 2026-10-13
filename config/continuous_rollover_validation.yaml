@@ -1,0 +1,17 @@
+validation_phase: rollover
+validation_stage: continuous_contract_rollover
+baseline_commit: a8169ccd677a90d7d18cd8463fae80a9adb834eb
+product: TXF
+session: regular
+timeframe: 1
+sort: asc
+fields: open,high,low,close,volume,average
+continuous_contract: 1!
+old_contract: '202609'
+new_contract: '202610'
+window_from: '2026-09-10'
+window_to: '2026-09-22'
+expiry_date: '2026-09-16'
+minimum_adjustment_rows: 2
+adjustment_offset_atol: 0.00000001
+adjustment_ratio_atol: 0.0000000001

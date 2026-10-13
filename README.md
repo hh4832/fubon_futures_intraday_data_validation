@@ -207,3 +207,54 @@ cross-year dates 在 `config/historical_validation.yaml` 固定：每年 5 個�
 `historical_overlap.py`、`rollover_validation.py`、`historical_runner.py`。
 重用現有登入、官方 installer、retry/raw writer、archive、OHLC/time/aggregation primitives。
 開發完成仍不代表 live historical API 成功；沒有憑證時僅執行 synthetic tests。
+
+## Continuous Contract Rollover Validation
+
+獨立分支 `feature/continuous-contract-rollover-validation`，基於 historical baseline `a8169cc`。
+新 Notebook：`notebooks/validate_fubon_futures_rollover.ipynb`；Run All 預設只跑單一 regular 1m 換月窗口。
+沿用原本 Secrets、官方 installer、read-only client、raw writer、normalization 與獨立 Drive archive。
+
+### 固定範圍
+
+`TXF`、`regular`、`1m`、`asc`、`open,high,low,close,volume,average`。
+三組 `1!`、`202609`、`202610` **全部使用 2026-09-10～2026-09-22**，沒有縮短舊契約窗口。
+Expiry reference 為 `2026-09-16`；只描述實際切換與 before/on/after 的一致性，不預設 expiry-based rule。
+本入口不呼叫 historical phases、不抓 cross-year/afterhours/higher timeframe、不做 production download。
+設定位於 `config/continuous_rollover_validation.yaml`；固定核心範圍若變動會停止。
+
+### 比對與判讀
+
+- 保留每根 `actual_contract_month`、query `response_contractMonth`，按實際月份對照 raw contract。
+- OHLC 與 volume **exact** 比較，不用 tolerance 掩蓋 mismatch；average 單獨列出。
+- 重複 source bars 全保留；comparison-only projection 排除 ambiguous reference keys，明確寫入 anomalies，避免 many-to-many join。
+- 比較切換前一天、切換當天與後一天，每段至少 2 根完整 bars；缺 anchor date 不換日。
+- Constant offset / ratio 使用預先固定的數值精度診斷，但不改變 exact matching 或原始價格。
+- 只在各段與所有 observed bars 都吻合後，支持 sampled raw/unadjusted concatenation；不得推廣成多年 rule。
+- Roll gap 是跨契約 transition gap，可能包含隔夜市場變動，不能當市場真實報酬。
+- Volume leadership 僅用 observed minute-volume sums；缺少到期後舊契約資料保持 NaN，不補 0。
+- 同源比較不是 external validation；單一 expiry/volume timing 一致不能證明 provider 的唯一規則。
+
+### 輸出
+
+`raw/rollover_1bang_attemptN.json`、`rollover_202609_attemptN.json`、`rollover_202610_attemptN.json`。
+`data/rollover_1bang.parquet`、`rollover_202609.parquet`、`rollover_202610.parquet`。
+以下 CSV 保存於新 archive 的 `diagnostics/`：
+
+| 檔案 | 用途 |
+|---|---|
+| `rollover_contract_coverage.csv` | 每日 actual months、首末時間、partial-day switch |
+| `rollover_mapping.csv` | 所有 continuous bars 與 old/new raw references、exact flags |
+| `rollover_transition_summary.csv` | 切換 timestamp/day、expiry consistency、roll gap、volume consistency |
+| `rollover_price_comparison.csv` | 三組 OHLC、exact flags、close differences |
+| `rollover_volume_comparison.csv` | 每日 minute-volume totals、leadership crossover、simple rule counterexamples |
+| `rollover_adjustment_test.csv` | 前一天／當天／後一天 raw/additive/ratio evidence |
+| `rollover_daily_summary.csv` | 每天是哪個月份、三組 row counts、raw match |
+| `rollover_anomalies.csv` | third month、partial-day switch、duplicates、gaps、missing references、mismatches |
+| `rollover_field_comparison.csv` | OHLC/volume/average exact match rates 與 unavailable counts |
+| `rollover_input_validation.csv`、`rollover_api_requests.csv`、`rollover_performance.csv` | schema/numeric quality、requests/retries、執行時間 |
+
+`run_info.txt` 記錄 `validation_phase=rollover`、`validation_stage=continuous_contract_rollover`、
+Git commit、window、old/new/continuous contract、expiry、requests/errors；不寫入 secrets。
+`validation_summary.md/.txt` 回答 A–P 問題、列出反對者觀點與 evidence labels。
+
+開發測試不使用 credentials。Live rollover 尚待 Colab 執行；mechanism 不清楚時結論為「修改後再測」。

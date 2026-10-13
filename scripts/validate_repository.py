@@ -17,6 +17,10 @@ for notebook in sorted((ROOT/'notebooks').glob('*.ipynb')):
         assert len(notebook_cells)==25
     elif notebook.name=='validate_fubon_futures_historical.ipynb':
         assert 'MAX_PHASE = 1' in '\n'.join(c.source for c in notebook_cells)
+    elif notebook.name=='validate_fubon_futures_rollover.ipynb':
+        sources='\n'.join(c.source for c in notebook_cells)
+        assert 'run_rollover(' in sources and 'MAX_PHASE' not in sources
+        assert 'feature/continuous-contract-rollover-validation' in sources
     for i,cell in enumerate(notebook_cells):
         ast.parse(cell.source,filename=f'{notebook.name} cell {i+1}')
         assert cell.execution_count is None and not cell.outputs
@@ -50,4 +54,4 @@ assert 'https://github.com/hh4832/fubon_futures_intraday_data_validation.git' in
 config=(ROOT/'config/validation_config.yaml').read_text()
 assert '/content/drive/MyDrive/00Quant_Research/fubon_futures_intraday_data_validation' in config
 if errors:raise RuntimeError('\n'.join(errors))
-print('PASS: Both Notebook JSON files, intraday 25 code cells, syntax, local imports, output-free cells, paths, read-only operations, credential/binary scan')
+print('PASS: All Notebook JSON files, intraday 25 code cells, syntax, local imports, output-free cells, paths, read-only operations, credential/binary scan')

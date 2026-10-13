@@ -18,3 +18,12 @@ historical vs intraday 是 provider internal consistency；external validation �
 Documented fact / Observed fact / Inference / Unresolved 必須區分。
 夜盤交易日映射須使用具來源 session windows，不能將週末/假日視為普通 +1 天。
 calendar 超出已審核範圍必須停止；calendar/reference count 不能充當 confirmed missing-data 證據。
+
+## Independent continuous rollover phase
+Rollover-only entrypoint 只查固定 2026-09-10～09-22 regular 1m 的 1!/202609/202610。
+三組 from/to 必須完全一致，包含舊契約到期後期間，不因結果改 window。
+此獨立入口基於已完成 historical baseline，不呼叫原 historical phase 1→7 runner。
+Exact OHLC/volume comparison 不允許 tolerance；adjustment-model tolerance 僅用於診斷，不改資料。
+不得用 missing expired-contract volume=0 判定 crossover；空缺保持 NaN。
+重複 timestamp 不得 silent drop；comparison projection 可排除 ambiguous reference keys，但 raw/data/anomalies 必須完整保留。
+Observed transition、expiry/volume consistency 與 provider rule proof 必須分開；單一窗口不授權多年 returns。
