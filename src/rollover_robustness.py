@@ -1,11 +1,13 @@
 """Independent six-window regular/night validation runner; historical 1m only."""
 from pathlib import Path
 from time import perf_counter
+import traceback
 import pandas as pd
 import yaml
 from tqdm.auto import tqdm
 from .archive import start_run, write_info, finish_run
 from .config import ROOT
+from .fatal_diagnostics import redact_sensitive_text
 from .diagnostics import write_table
 from .historical_client import (HistoricalFatalError, HistoricalReader, load_historical_config,
     read_canonical_documentation, session_calendar)
@@ -236,6 +238,9 @@ def run_rollover_robustness(rest,root,sdk_info,auth_info,cfg=None):
         summary=archive(status)
         return path,summary
     except Exception as exc:
-        info.update(execution_status='STOPPED',fatal_error_type=type(exc).__name__)
+        trace=redact_sensitive_text(traceback.format_exc())
+        (path/'diagnostics'/'fatal_traceback.txt').write_text(trace,encoding='utf-8')
+        info.update(execution_status='STOPPED',fatal_error_type=type(exc).__name__,
+            fatal_error_message=redact_sensitive_text(str(exc)))
         archive('UNRESOLVED',stopped=True)
-        raise HistoricalFatalError(f'Robustness run stopped ({type(exc).__name__}); safe diagnostics in {path}') from None
+        raise HistoricalFatalError(f'Robustness run stopped ({type(exc).__name__}); safe diagnostics in {path}') from exc

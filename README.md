@@ -272,3 +272,21 @@ OHLC/volume exact match 無 tolerance；average mismatch 獨立呈現。Adjustme
 缺分鐘表按 sample/session/trade_date/query/underlying role 分開；inactive gaps 不影響 `1!` 評級。具 active reference bar 而 `1!` 缺 bar（或相反）為 unresolved blocker；雙方相同的 scheduled-slot absence 是未確認 no-trade/provider omission 的 caveat，不自稱已確認資料遺失。每個 requested session 完全空白則阻擋。到期月 regular reference 13:30 結束，其他月份 13:45；特殊 13:45 bar 保留，不固定要求 300 bars。
 
 六個樣本 raw construction 都可追溯且無 blockers，可判 `PASS WITH CAVEATS` / `保留`，私有 trigger 名稱未知不構成 blocker。Regular/night 邊界不同要明確呈現，不能預設一致；volume 只反證 simple observed minute-volume-max，expiry alignment 不是 universal rule proof。這不驗證 2017–2026 全歷史；external validation 明列 `NOT PERFORMED`。下一階段需另行執行，roll_gap_return 僅為 transition gap，不是市場報酬。
+
+### Minimal correction: failed robustness run replay
+
+`20261014_060519_d3d96794bd6b` 的三份 regular parquet 可離線重現：到期日 reference end 原為固定 `UTC+08:00`，calendar start 則為 `Asia/Taipei`。`pd.date_range` 要求兩端 timezone identity 一致；修正只將既定 13:30 endpoint `tz_convert(start.tz)`，不改時刻、日期、samples、API semantics 或 validation thresholds。Single-rollover runner 不呼叫新 `missing_minutes`；原短 synthetic sessions 的 close 早於 13:30，因此未覆蓋該分支。月份 coverage legacy 欄名是 cfg-driven 值，robustness 已 rename 成 generic names，並非本次 root cause。
+
+```python
+from scripts.replay_rollover_robustness import replay_archive
+output, replay_info = replay_archive(
+    "/content/drive/MyDrive/00Quant_Research/fubon_futures_intraday_data_validation/20261014_060519_d3d96794bd6b",
+    "/content/drive/MyDrive/00Quant_Research/fubon_futures_intraday_data_validation/NEW_TIMESTAMP_COMMIT_replay",
+)
+```
+
+也可用 `python -m scripts.replay_rollover_robustness --archive PATH --output NEW_PATH`。輸出必須為新的、source archive 外的目錄。Config snapshot、sample metadata、calendar snapshot 必須一致；只讀原 parquet、不重做 normalization、不呼叫 SDK/API。`replay_status=PASS` 表示 analysis 成功執行，`analysis_classification` 仍保留原本 PASS/CAVEATS/FAIL/UNRESOLVED；input hashes 與 code Git provenance 存於 `replay_info.json`，不冒稱 formal success。
+
+Notebook 已加入 pytest → archive replay → `run_first_regular_smoke` 的 gates。Smoke 只查既定 202606→202607 regular 三組原始查詢，保留 raw/data/diagnostics，寫入另一個新的 archive 並標示 `rollover_robustness_smoke`。只有全部 gates 通過，才另建 36-request formal archive；STOPPED archive 不覆寫或重用。
+
+Fatal handling 現在保留 `diagnostics/fatal_traceback.txt`、`fatal_error_type` 與遮蔽敏感值後的 `fatal_error_message`，並 `raise ... from exc` 保留 cause。Traceback 不 dump locals，不將 SDK credentials/account values 寫入輸出。

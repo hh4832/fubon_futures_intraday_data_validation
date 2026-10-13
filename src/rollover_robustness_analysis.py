@@ -34,7 +34,7 @@ def missing_minutes(frames, coverage, cfg, calendar, session):
             underlying = True if query == '1!' else query == actual if actual is not None else None
             start, end = cal[session+'_open'], cal[session+'_close']
             if session == 'regular' and date == cfg['expiry_date'] and (query == cfg['old_contract'] or query == '1!' and actual == cfg['old_contract']):
-                end = min(end, pd.Timestamp(date+'T13:30:00+08:00'))
+                end = min(end, pd.Timestamp(date+'T13:30:00+08:00').tz_convert(start.tz))
             expired = query == cfg['old_contract'] and date > cfg['expiry_date']
             slots = pd.date_range(start, end, freq='min', inclusive='left') if not expired else pd.DatetimeIndex([], tz='Asia/Taipei')
             observed = frame[frame.trade_date.eq(date)].timestamp
