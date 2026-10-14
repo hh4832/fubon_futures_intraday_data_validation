@@ -1,5 +1,6 @@
 """Vectorized final integrity diagnostics. Scheduled absence never means zero trades."""
 import json
+from decimal import Decimal,InvalidOperation
 import numpy as np
 import pandas as pd
 from .historical_validation import validate_historical_schema,validate_historical_ohlc,status_rollup
@@ -81,6 +82,35 @@ def repeatability(first,second,tags):
     return dict(tags,first_rows=len(first),repeat_rows=len(second),same_row_set=bool(both.all() and len(first)>0),same_timestamps=bool(first.timestamp.equals(second.timestamp)),mismatch_rows=mismatch,status='PASS' if len(first) and mismatch==0 else 'UNRESOLVED',notes='exact timestamp/month/OHLCVA comparison; both raw responses preserved; NaN values are not exact proof')
 
 
+def compare_bucket_fields(actual,expected):
+    """Exact values after representation normalization; no price/volume tolerance."""
+    fields=PRICES+['volume'];left=actual[['timestamp']+fields].copy();right=expected[['timestamp']+fields].copy()
+    left['timestamp']=pd.to_datetime(left.timestamp,utc=True,errors='coerce')
+    right['timestamp']=pd.to_datetime(right.timestamp,utc=True,errors='coerce')
+    invalid=left.timestamp.isna().any() or right.timestamp.isna().any() or left.timestamp.duplicated().any() or right.timestamp.duplicated().any()
+    timestamps=bool(not invalid and left.timestamp.reset_index(drop=True).eq(right.timestamp.reset_index(drop=True)).all()) if len(left)==len(right) else False
+    def number(value):
+        try:
+            result=Decimal(str(value))
+            return result if result.is_finite() else None
+        except (InvalidOperation,ValueError):return None
+    checks=dict(timestamp_match=timestamps)
+    if invalid:
+        checks.update({field+'_match':False for field in fields})
+        checks.update({'max_abs_diff_'+field:np.nan for field in fields})
+        return dict(checks,mismatch_bucket_count=max(len(left),len(right)),equal=False)
+    aligned=left.merge(right,on='timestamp',how='outer',suffixes=('_actual','_expected'),indicator=True,validate='one_to_one')
+    matches=aligned['_merge'].eq('both')
+    for field in fields:
+        a=aligned[field+'_actual'].map(number);b=aligned[field+'_expected'].map(number)
+        known=a.notna() & b.notna()
+        equal=known & a.eq(b)
+        checks[field+'_match']=bool(equal.all())
+        checks['max_abs_diff_'+field]=float((a[known]-b[known]).abs().max()) if known.any() else np.nan
+        matches &= equal
+    return dict(checks,mismatch_bucket_count=int((~matches).sum()),equal=bool(timestamps and matches.all() and len(aligned)>0))
+
+
 def internal_aggregation(frame,calendar,session,tags):
     rows=[];outputs=[]
     # Fixed first scheduled requested session; incomplete input is not replaced.
@@ -90,17 +120,31 @@ def internal_aggregation(frame,calendar,session,tags):
     inside=(one.timestamp>=cal[session+'_open']) & (one.timestamp<=cal[session+'_close'])
     for timeframe in [5,15,60]:
         if one.empty or not unique or not inside.all():
-            rows.append(dict(tags,trade_date=date,timeframe=timeframe,status='UNRESOLVED',notes='fixed first session empty/mixed/duplicate/outside; no substitute session'));continue
+            rows.append(dict(tags,trade_date=date,timeframe=timeframe,cross_session_leakage=int((~inside).sum()),status='UNRESOLVED',notes='fixed first session empty/mixed/duplicate/outside; no substitute session'));continue
         output=aggregate(one,timeframe,cal[session+'_open'])
         repeated=aggregate(one,timeframe,cal[session+'_open'])
         labels=cal[session+'_open']+pd.to_timedelta(((one.timestamp-cal[session+'_open']).dt.total_seconds()//(timeframe*60))*timeframe,unit='min')
         expected=one.assign(bucket=labels).groupby('bucket',sort=True).agg(open=('open','first'),high=('high','max'),low=('low','min'),close=('close','last'),volume=('volume','sum')).reset_index().rename(columns={'bucket':'timestamp'})
-        deterministic=output[['timestamp']+PRICES+['volume']].equals(expected) and output.equals(repeated)
+        checks=compare_bucket_fields(output,expected);repeat_checks=compare_bucket_fields(output,repeated)
+        leakage=int((~inside).sum())
+        deterministic=checks['equal'] and repeat_checks['equal'] and leakage==0
         conserved=output.volume.sum()==one.volume.sum()
         output['trade_date']=date;output['session']=session;output['actual_contract_month']=one.actual_contract_month.iloc[0]
         output['terminal_only_bucket']=output.timestamp.eq(cal[session+'_close'])
+        # Partial scheduled tail and observed gaps stay visible; neither is a repair.
+        scheduled_end=output.timestamp+pd.Timedelta(minutes=timeframe)
+        scheduled_minutes=((scheduled_end.clip(upper=cal[session+'_close'])-output.timestamp).dt.total_seconds()/60).clip(lower=0)
+        partial=output.minute_count.lt(timeframe) & ~output.terminal_only_bucket
+        incomplete=(scheduled_minutes>0) & output.minute_count.lt(scheduled_minutes)
+        scheduled_labels=pd.date_range(cal[session+'_open'],cal[session+'_close'],freq=f'{timeframe}min',inclusive='left')
+        missing_buckets=len(scheduled_labels.difference(output.timestamp))
         outputs.append((timeframe,output))
-        rows.append(dict(tags,trade_date=date,timeframe=timeframe,input_rows=len(one),output_buckets=len(output),deterministic_bucket=deterministic,volume_sum_preserved=bool(conserved),cross_session_leakage=0,terminal_only_buckets=int(output.terminal_only_bucket.sum()),status='PASS WITH CAVEATS' if deterministic and conserved else 'UNRESOLVED',notes='internal only; observed bars aggregated with canonical session anchor; missing/partial buckets and terminal-only bucket not repaired; no provider higher-timeframe query'))
+        caveats=partial.any() or incomplete.any() or missing_buckets or output.terminal_only_bucket.any()
+        rows.append(dict(tags,trade_date=date,timeframe=timeframe,input_rows=len(one),output_buckets=len(output),
+            **{k:v for k,v in checks.items() if k!='equal'},repeat_aggregation_equal=repeat_checks['equal'],repeat_mismatch_bucket_count=repeat_checks['mismatch_bucket_count'],
+            deterministic_bucket=bool(deterministic),volume_sum_preserved=bool(conserved),cross_session_leakage=leakage,
+            partial_bucket_count=int(partial.sum()),incomplete_bucket_count=int(incomplete.sum())+missing_buckets,missing_bucket_count=missing_buckets,terminal_only_bucket_count=int(output.terminal_only_bucket.sum()),terminal_only_buckets=int(output.terminal_only_bucket.sum()),
+            status=('PASS WITH CAVEATS' if caveats else 'PASS') if deterministic and conserved else 'UNRESOLVED',notes='exact internal observed-bar comparison; dtype alone is not mismatch; missing/partial/terminal-only buckets preserved; no provider higher-timeframe query'))
     return pd.DataFrame(rows),outputs
 
 

@@ -103,6 +103,10 @@ class FrozenSampleMatrix:
             future_trade_dates=sum(len(s['trade_dates']) for s in self.samples if not s['included_in_formal_run']),
             scope_language=SCOPE_LANGUAGE,
             excluded_windows_note='; '.join(f"{s['year']} {s['window_type']} not yet eligible as of run date. NOT TESTED — FUTURE WINDOW" for s in self.samples if not s['included_in_formal_run']))
+        correction=cfg.get('validator_correction_provenance',{})
+        if correction:
+            self.metadata['eligibility_policy_previous_sample_matrix_sha256']=PREVIOUS_SAMPLE_MATRIX_SHA256
+            self.metadata.update(correction)
         self.sample_matrix_sha256=hashlib.sha256(json.dumps(dict(cfg=self.cfg,calendar_sha256=self.file_hash,plan=self.plan,samples=self.samples,metadata=self.metadata),sort_keys=True,separators=(',',':')).encode()).hexdigest()
         self.config_hash=hashlib.sha256(json.dumps(cfg,sort_keys=True).encode()).hexdigest()
     @property

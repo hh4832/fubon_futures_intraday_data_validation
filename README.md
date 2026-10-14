@@ -299,7 +299,7 @@ Afterhours 普通 bar 仍用 `[afterhours_open, afterhours_close)`；只有 `tim
 
 ## Final Cross-Year Historical Integrity Validation
 
-獨立入口 `src.final_integrity_runner.run_final_integrity`，baseline `d5b7cf2`；不呼叫前階段 runners。[設計與官方來源](docs/final_cross_year_validation_design.md)說明30個預定窗口、190個主樣本交易日、2017起點probe、2018補班週六與2024休市例外，以及外部比較定義。
+獨立入口 `src.final_integrity_runner.run_final_integrity`，baseline `d5b7cf2`；不呼叫前階段 runners。[設計與官方來源](docs/final_cross_year_validation_design.md)說明30個預定窗口、190個主樣本交易日、2017起點probe、2018非交易週六修正與2024休市例外，以及外部比較定義。
 
 `config/final_cross_year_validation.yaml` 與 `config/final_cross_year_sample_calendar.csv` 在live requests前固定。`python -m scripts.freeze_final_samples --output NEW_DIR` 產生 predeclared sample matrix、query plan、calendar snapshot與 SHA256/readiness。完整30-window plan為108 logical requests；本次as-of只有29 eligible windows，為106 requests（98 primary、6 repeatability、2 availability）；sequential、bounded retries，全部historical TXF 1m。
 
@@ -308,3 +308,9 @@ Afterhours 普通 bar 仍用 `[afterhours_open, afterhours_close)`；只有 `tim
 Colab：[final integrity notebook](https://colab.research.google.com/github/hh4832/fubon_futures_intraday_data_validation/blob/feature/final-cross-year-historical-integrity-validation/notebooks/validate_fubon_futures_final_integrity.ipynb)。Clean feature checkout → pytest → freeze/readiness → SDK/auth → historical retrieval → per-year diagnostics／annual exact rollover → six repeats → internal5/15/60 aggregation → independent officialTAIFEX spot checks → yearly/global A–X及20問報告。
 
 所有raw attempts與normalized parquet保存於新Drive timestamp_commit archive。Global invalid rows parquet保留原值；missing不是zero/no-trade；terminal bar不刪；不跨月份計算return、不調整continuous價格。External download不可用或schema不符時保留error/raw且UNRESOLVED，不以same-provider比較替代。Close/volume定義未能對齊則NOT COMPARABLE；compatible high/low缺乏證據或明確矛盾會阻擋。
+
+### Final validator corrections — offline replay first
+
+2018 rollover依相同expiry±4 official dates修正June16→June13；June19 night歸屬June15 15:00→June16 05:00。其他年份samples、future eligibility、thresholds不改。Config保留previous formal run/hash與官方calendar correction reason。
+
+`python -m scripts.replay_final_validator_corrections --archive EXISTING_FINAL_ARCHIVE --output NEW_REPLAY_DIR` 僅重算internal aggregation、saved TAIFEX raw selection與report；不登入SDK、不呼叫市場API。新增`external_taifex_selection_diagnostics.csv`；aggregation改逐欄exact numeric比較，保留partial/terminal buckets；yearly區分validation_blocker與major_data_anomaly。Replay input hashes及dirty code provenance存於replay_info.json。舊2018資料不含新June13窗口，不能以offline結果改成formal PASS。pytest/replay PASS後仍須新commit、SHA、archive及完整正式rerun；目前Notebook預設停在live approval前。

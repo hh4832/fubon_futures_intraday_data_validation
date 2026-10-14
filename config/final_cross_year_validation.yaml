@@ -11,7 +11,7 @@ timeframe: 1
 fields: open,high,low,close,volume,average
 sort: asc
 calendar_file: config/final_cross_year_sample_calendar.csv
-calendar_sha256: dd32b4ff206faa21b45f8a5865c508c3cc3d9ad175c770d127542311ee187c9e
+calendar_sha256: f5adec3f904e4f9243b981d1e690b3a322a7ba385bcbf4e3613841e505af254c
 documented_availability: 2017-06
 availability_dates:
 - '2017-06-01'
@@ -111,16 +111,16 @@ samples:
   year: 2018
   window_type: june_rollover
   trade_dates:
+  - '2018-06-13'
   - '2018-06-14'
   - '2018-06-15'
-  - '2018-06-16'
   - '2018-06-19'
   - '2018-06-20'
   - '2018-06-21'
   - '2018-06-22'
   - '2018-06-25'
   - '2018-06-26'
-  window_from: '2018-06-14'
+  window_from: '2018-06-13'
   window_to: '2018-06-26'
   old_contract: '201806'
   new_contract: '201807'
@@ -585,3 +585,12 @@ samples:
   expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
   calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2026Calendar.pdf
   fallback_reason: null
+
+validator_correction_provenance:
+  previous_formal_run_id: 20261014_110211_ce58e87c15cf
+  previous_formal_api_request_count: 106
+  calendar_correction_after_formal_run: true
+  previous_sample_matrix_sha256: 878eb4457be463ee80da1d40cc5c93b3d35e16293ca7a933cad2cd333c95422d
+  previous_calendar_sha256: dd32b4ff206faa21b45f8a5865c508c3cc3d9ad175c770d127542311ee187c9e
+  calendar_correction_reason: 2018-06-16 was incorrectly included as a scheduled TXF trading date in the frozen calendar. Correction is based on official TAIFEX calendar semantics, not Fubon market-data results.
+  official_calendar_source: https://www.taifex.com.tw/chinese/4/2018Calendar_CH.pdf

@@ -148,6 +148,7 @@ def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_
             for session in cfg['sessions']:
                 name=f"{sample['year']}_ordinary_early_{session}_1bang"
                 comparison=external_spot_check(frames[name],date,sample['year'],session,official,metadata)
+                collect('external_selection',pd.DataFrame([comparison.attrs['selection_diagnostics']]))
                 collect('external',comparison)
         for session in cfg['sessions']:
             entry=next(e for e in primary if e['role']=='availability' and e['session']==session)

@@ -83,7 +83,8 @@ def test_preflight_revision_has_zero_requests_and_provenance(tmp_path,monkeypatc
     assert info['api_request_count']==info['api_request_count_before_revision']==0
     assert info['sampling_policy_revision_reason']==POLICY_REVISION_REASON
     assert info['as_of_timestamp']==AS_OF
-    assert info['previous_sample_matrix_sha256']==PREVIOUS_SAMPLE_MATRIX_SHA256
+    assert info['previous_sample_matrix_sha256']==load_final_config()['validator_correction_provenance']['previous_sample_matrix_sha256']
+    assert info['eligibility_policy_previous_sample_matrix_sha256']==PREVIOUS_SAMPLE_MATRIX_SHA256
 
 def test_naive_asof_rejected_before_requests():
     with pytest.raises(HistoricalFatalError,match='timezone-aware'):

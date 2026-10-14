@@ -10,7 +10,7 @@ OUTPUT_NAMES={
  'traceability':'cross_year_contract_traceability','rollover_fields':'cross_year_rollover_field_comparison',
  'adjustment':'cross_year_adjustment_validation','roll_gap':'cross_year_roll_gap',
  'repeatability':'cross_year_repeatability','aggregation':'cross_year_aggregation_validation',
- 'external':'external_taifex_spot_check','availability':'historical_availability_boundary'}
+ 'external':'external_taifex_spot_check','external_selection':'external_taifex_selection_diagnostics','availability':'historical_availability_boundary'}
 
 
 def yearly_summary(tables,cfg,request_complete):
@@ -60,7 +60,10 @@ def yearly_summary(tables,cfg,request_complete):
         compatible=external[external.definition_compatible.eq(True)] if len(external) else pd.DataFrame()
         row['external_validation_status']=status_rollup(compatible.status.tolist()) if len(compatible) else 'UNRESOLVED'
         prices_external=compatible[compatible.field.isin(['high','low'])] if len(compatible) else pd.DataFrame()
-        if len(prices_external)!=4:row['external_validation_status']='UNRESOLVED'
+        required_external={(session,field) for session in cfg['sessions'] for field in ['contract_identifier','official_trading_date','high','low']}
+        actual_external=set(zip(compatible.session,compatible.field)) if len(compatible) else set()
+        if len(compatible)!=8 or actual_external!=required_external:
+            row['external_validation_status']=status_rollup([row['external_validation_status'],'UNRESOLVED'])
         statuses += [row['external_validation_status']]
         if year==2017:
             available=tables.get('availability',pd.DataFrame())
@@ -68,7 +71,21 @@ def yearly_summary(tables,cfg,request_complete):
         if not request_complete:statuses += ['UNRESOLVED']
         row['classification']=status_rollup(statuses)
         if row['classification']=='PASS':row['classification']='PASS WITH CAVEATS'
-        row['major_anomaly']=row['classification'] in {'FAIL','UNRESOLVED'}
+        row['validation_blocker']=row['classification'] in {'FAIL','UNRESOLVED'}
+        def count(table,column):
+            df=section(table,year)
+            return int(pd.to_numeric(df[column],errors='coerce').sum()) if column in df else 0
+        trace=section('traceability',year,True)
+        anomaly_counts=dict(ohlc_invalid_count=count('ohlc','OHLC_invalid_rows'),duplicate_count=row['duplicate_count'],outside_session_count=count('session','outside_session_rows'),
+            missing_contract_metadata_count=count('traceability','missing_contract_metadata_rows'),
+            partial_session_switch_count=int(trace.partial_switch.sum()) if len(trace) else 0,
+            rollover_ohlc_mismatch_count=int(prices.mismatch_rows.sum()) if len(prices) else 0,
+            volume_mismatch_count=int(volume.mismatch_rows.sum()) if len(volume) else 0,
+            active_asymmetric_missing_count=row['active_asymmetric_missing_count'],repeatability_mismatch_count=count('repeatability','mismatch_rows'),
+            external_price_contradiction_count=int(prices_external.status.eq('FAIL').sum()) if len(prices_external) else 0)
+        row.update(anomaly_counts)
+        row['major_data_anomaly']=any(value>0 for value in anomaly_counts.values())
+        row['major_anomaly']=row['major_data_anomaly'] # Legacy alias, no longer a blocker flag.
         rows.append(row)
     return pd.DataFrame(rows)
 
