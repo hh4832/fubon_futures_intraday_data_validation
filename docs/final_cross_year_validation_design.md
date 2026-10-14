@@ -21,11 +21,17 @@ Other unscheduled closures cannot be inferred from annual calendar colors. Froze
 
 ## Readiness
 
-On 2026-10-14, the 2026 ordinary-late sample is future data (Nov 2–6). Full final validation is intentionally blocked before all scheduled sessions complete (last regular close: 2026-11-06 13:45 Asia/Taipei). It cannot be replaced with an earlier window or marked PASS. The offline freeze CLI creates a separate preflight artifact; it does not create a successful formal archive.
+Freeze an explicit timezone-aware as_of_timestamp before any market request. A predetermined window is ELIGIBLE only if every required scheduled session ended strictly before that timestamp. Otherwise keep its original planned dates and record NOT_YET_ELIGIBLE, included_in_formal_run=False, exclusion_reason=FUTURE_WINDOW. There is no alternate date selection or partial query.
+
+As of 2026-10-14, all 2017–2025 windows and 2026 ordinary_early/rollover are eligible. The Nov 2–6 2026 ordinary_late window is retained but NOT TESTED — FUTURE WINDOW. Planned windows=30, eligible=29, future=1; planned dates=190, eligible=185, future=5. require_completed checks only included windows plus the unchanged availability probes; excluded future windows cannot block readiness or become data-quality PASS/FAIL/UNRESOLVED. An included incomplete session still blocks. Its complete calendar is preserved in the snapshot.
+
+Hash the original config/calendar, frozen timestamp, annotated planned matrix, revised query plan and policy provenance. Metadata records sampling_policy_revision_reason="Future predetermined current-year window detected before any market request.", api_request_count_before_revision=0 and the prior hash. No formal Fubon market result was read before this policy correction: no data-dependent substitution or post-result selection. Frozen eligibility never changes during a run.
+
+READY is only preflight readiness. Notebook defaults to an explicit stop before SDK/auth/live calls until approval; it passes the same freeze timestamp to the formal runner. Successful scope language: "Validated deterministic historical samples from 2017-06 through the latest completed eligible window as of the formal run timestamp." Never claim full calendar year 2026 validation. Yearly summary records 2026_late_year_status=NOT_YET_ELIGIBLE separately from included data-quality gates.
 
 ## Request accounting
 
-100 primary requests: 10 years × (two ordinary windows × two sessions + one rollover × two sessions × three contracts). Six exact repeats: 2017/2021/2026 ordinary-early, both sessions, 1!. Two bounded 2017 availability queries. Total 108 logical historical.candles requests; max three attempts each, sequential, timeframe=1, TXF, asc, canonical OHLCVA fields. No intraday, product discovery or provider higher-timeframe requests. Independent official daily HTTP downloads are counted separately from Fubon requests.
+100 primary requests: 10 years × (two ordinary windows × two sessions + one rollover × two sessions × three contracts). Six exact repeats: 2017/2021/2026 ordinary-early, both sessions, 1!. Two bounded 2017 availability queries. Full planned scope totals 108 logical historical.candles requests. Current as-of excludes only the two 2026 ordinary_late queries, so included scope is 98 primary + six repeats + two availability = 106 requests; max three attempts each, sequential, timeframe=1, TXF, asc, canonical OHLCVA fields. No intraday, product discovery or provider higher-timeframe requests. Independent official daily HTTP downloads are counted separately from Fubon requests.
 
 ## Independent external definitions
 

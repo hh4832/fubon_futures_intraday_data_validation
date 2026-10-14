@@ -301,9 +301,9 @@ Afterhours 普通 bar 仍用 `[afterhours_open, afterhours_close)`；只有 `tim
 
 獨立入口 `src.final_integrity_runner.run_final_integrity`，baseline `d5b7cf2`；不呼叫前階段 runners。[設計與官方來源](docs/final_cross_year_validation_design.md)說明30個預定窗口、190個主樣本交易日、2017起點probe、2018補班週六與2024休市例外，以及外部比較定義。
 
-`config/final_cross_year_validation.yaml` 與 `config/final_cross_year_sample_calendar.csv` 在live requests前固定。`python -m scripts.freeze_final_samples --output NEW_DIR` 產生 predeclared sample matrix、query plan、calendar snapshot與 SHA256/readiness。預期108 logical requests：100 primary、6 repeatability、2 availability；sequential、bounded retries，全部historical TXF 1m。
+`config/final_cross_year_validation.yaml` 與 `config/final_cross_year_sample_calendar.csv` 在live requests前固定。`python -m scripts.freeze_final_samples --output NEW_DIR` 產生 predeclared sample matrix、query plan、calendar snapshot與 SHA256/readiness。完整30-window plan為108 logical requests；本次as-of只有29 eligible windows，為106 requests（98 primary、6 repeatability、2 availability）；sequential、bounded retries，全部historical TXF 1m。
 
-**2026年11月預定窗口尚未完成時，final run會在第一個API前停止。** 不以其他窗口取代；最早全窗口結束時間為2026-11-06 13:45 Asia/Taipei。此implementation與synthetic tests不等於formal PASS。
+**Freeze-time as-of eligibility**：所有required sessions須在as_of_timestamp前完整結束。2026 ordinary_late原定Nov2–6仍在matrix，標記NOT_YET_ELIGIBLE / FUTURE_WINDOW / included_in_formal_run=False，NOT TESTED — FUTURE WINDOW，不是data-quality PASS/FAIL/UNRESOLVED。其餘29窗口共185eligible primary dates；planned190、future5。require_completed只檢查included sessions。preflight以`--as-of`可重現，matrix SHA包括timestamp、eligibility與revision provenance（revision前API=0）。READY不表示formal PASS或live authorization；Notebook預設在preflight後停止，須明確同意後才設LIVE_FUBON_REQUESTS_APPROVED=True。不得聲稱validated full calendar year 2026；只驗證截至formal as-of的已完成deterministic samples。
 
 Colab：[final integrity notebook](https://colab.research.google.com/github/hh4832/fubon_futures_intraday_data_validation/blob/feature/final-cross-year-historical-integrity-validation/notebooks/validate_fubon_futures_final_integrity.ipynb)。Clean feature checkout → pytest → freeze/readiness → SDK/auth → historical retrieval → per-year diagnostics／annual exact rollover → six repeats → internal5/15/60 aggregation → independent officialTAIFEX spot checks → yearly/global A–X及20問報告。
 

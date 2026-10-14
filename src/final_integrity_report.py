@@ -23,7 +23,14 @@ def yearly_summary(tables,cfg,request_complete):
         if continuous and 'contract_query' in out:out=out[out.contract_query.eq('1!')]
         return out
     for year in range(2017,2027):
-        statuses=[];row=dict(year=year,sampled_trade_dates=19)
+        samples=[s for s in cfg['samples'] if s['year']==year]
+        included=[s for s in samples if s.get('included_in_formal_run',True)]
+        late=next(s for s in samples if s['window_type']=='ordinary_late')
+        statuses=[];row=dict(year=year,sampled_trade_dates=sum(len(s['trade_dates']) for s in included),
+            planned_trade_dates=sum(len(s['trade_dates']) for s in samples),
+            late_year_status='INCLUDED — see data-quality gates' if late.get('included_in_formal_run',True) else 'NOT_YET_ELIGIBLE',
+            late_year_test_scope='INCLUDED' if late.get('included_in_formal_run',True) else 'NOT TESTED — FUTURE WINDOW')
+        if year==2026:row['2026_late_year_status']=row['late_year_status']
         for key,label in [('schema','schema_pass'),('timestamp','timestamp_pass'),('session','session_pass'),('ohlc','ohlc_pass'),('traceability','contract_traceability_pass')]:
             df=section(key,year,continuous=key in {'session','traceability'})
             value=status_rollup(df.status.tolist()) if 'status' in df else 'UNRESOLVED'
@@ -98,14 +105,17 @@ def final_report(tables,yearly,info,status):
     decision='保留' if passed else '修改後再測'
     headings=['Validation question','Provenance','Predeclared sampling design','Historical availability','Schema stability','Timestamp / timezone','Session mapping','Bar counts / special boundaries','Missing-minute diagnostics','OHLC integrity','ContractMonth traceability','Annual rollover confirmation','Back-adjustment evidence','Roll-gap behavior','Repeatability','1m aggregation','TAIFEX external validation','Year-by-year summary','Structural changes by year','Remaining unresolved issues','Opponent view','Final classification','Research decision','Canonical backtest-source recommendation']
     mapping={3:'availability',4:'schema',5:'timestamp',6:'session',7:'bar_count',8:'missing',9:'ohlc',10:'traceability',11:'rollover_fields',12:'adjustment',13:'roll_gap',14:'repeatability',15:'aggregation',16:'external'}
-    text=['# Final Cross-Year Historical Integrity Validation',f"Git: {info['git_commit']}; branch: {info['git_branch']}"]
+    text=['# Final Cross-Year Historical Integrity Validation',f"Git: {info['git_commit']}; branch: {info['git_branch']}",
+        info.get('scope_language','Deterministic sampled historical validation; not a full calendar year claim.') if passed else 'Validation of eligible deterministic historical samples is not yet complete.',
+        'As-of timestamp: '+str(info.get('as_of_timestamp','NOT RECORDED')),
+        info.get('excluded_windows_note','')]
     for i,title in enumerate(headings):
         text+=['',f'## {chr(65+i)}. {title}']
         if i in mapping:
             f=tables.get(mapping[i],pd.DataFrame())
             text+=['[Observed fact / Unresolved] '+(f.to_string(index=False) if len(f) else 'NOT PERFORMED; no PASS inferred')]
         elif i==0:text+=['[Inference] Assess sampled TXF historical 1m data-source integrity, not strategies or full-history proof.']
-        elif i in [1,2]:text += [str({k:info.get(k) for k in ['python_version','fubon_sdk_version','sample_matrix_sha256','sample_trade_date_count','expected_logical_request_count','logical_request_count','external_validation']})]
+        elif i in [1,2]:text += [str({k:info.get(k) for k in ['python_version','fubon_sdk_version','sample_matrix_sha256','as_of_timestamp','planned_windows','eligible_windows','future_windows','planned_total_trade_dates','eligible_trade_dates','future_trade_dates','sampling_policy_revision_reason','api_request_count_before_revision','sample_trade_date_count','expected_logical_request_count','logical_request_count','external_validation']})]
         elif i==17:text += [yearly.to_string(index=False)]
         elif i==18:text += ['[Inference] Compare raw_schema/dtype_signature and anomaly counts per year before attributing any change to provider methodology. Normalization success does not prove raw format unchanged.']
         elif i==19:text += ['[Unresolved] Shared omissions vs no-trade suppression; private trigger name; untested dates; daily close/volume definitions; failed or unavailable external checks.']

@@ -21,17 +21,18 @@ from .final_integrity_report import OUTPUT_NAMES,yearly_summary,global_summary,f
 
 def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_fetcher=None):
     cfg=cfg or load_final_config();root=Path(root)
-    matrix=FrozenSampleMatrix(cfg)
+    matrix=FrozenSampleMatrix(cfg,now=now)
     subprocess.run(['git','merge-base','--is-ancestor',cfg['baseline_commit'],'HEAD'],cwd=root,check=True,capture_output=True)
-    matrix.require_completed(now) # No market calls or fake partially completed final result.
+    matrix.require_completed() # Only included windows; excluded future dates remain recorded.
     doc,doc_info=read_canonical_documentation(cfg)
     path,info=start_run(root,cfg,sdk_info,auth_info)
     matrix.write(path)
     (path/'diagnostics/official_historical_documentation.txt').write_bytes(doc)
     info.update(doc_info,validation_phase='final_cross_year_historical_integrity',validation_stage='2017_2026_stratified_validation',
-        sample_matrix_sha256=matrix.sample_matrix_sha256,years_tested=[],sample_trade_date_count=190,availability_trade_date_count=5,
+        sample_matrix_sha256=matrix.sample_matrix_sha256,years_tested=[],sample_trade_date_count=matrix.metadata['eligible_trade_dates'],availability_trade_date_count=5,
         expected_logical_request_count=len(matrix.plan),logical_request_count=0,retry_count=0,
         external_validation='NOT PERFORMED',final_integrity_status='UNRESOLVED',research_decision='修改後再測')
+    info.update(matrix.metadata)
     write_info(path,info)
     groups={name:[] for name in OUTPUT_NAMES};frames={};items={};invalid=[];qualities=[];reader=None
     def collect(name,table):groups[name].append(table)
@@ -67,7 +68,7 @@ def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_
     def flush(stopped=False):
         tables={key:pd.concat(values,ignore_index=True) if values else pd.DataFrame() for key,values in groups.items()}
         complete=info['logical_request_count']==info['expected_logical_request_count'] and not stopped
-        yearly=yearly_summary(tables,cfg,complete)
+        yearly=yearly_summary(tables,dict(cfg,samples=matrix.samples),complete)
         status=status_rollup([*yearly.classification.tolist(),*qualities])
         if not complete and status!='FAIL':status='UNRESOLVED'
         summary,decision=final_report(tables,yearly,info,status)
@@ -95,7 +96,7 @@ def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_
         # Phases 4/5: no data repair; basic diagnostics on every query.
         for entry in primary:normalize_entry(entry,items[entry['name']])
         # Phase 6: annual rollover confirmation; scheduled-closed nights exempt, not replaced.
-        for sample in cfg['samples']:
+        for sample in matrix.eligible_samples:
             if sample['window_type']!='june_rollover':continue
             cal=matrix.calendar[matrix.calendar.sample_id.eq(sample['sample_id'])].copy()
             for session in cfg['sessions']:
@@ -129,7 +130,7 @@ def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_
             first=frames[entry['name'].removesuffix('_repeat')]
             result=repeatability(first,f,tags(entry));collect('repeatability',pd.DataFrame([result]));qualities.append(result['status'])
         # Phase 8: internal aggregation, no provider higher-timeframe requests.
-        for sample in cfg['samples']:
+        for sample in matrix.eligible_samples:
             if sample['window_type']!='ordinary_early':continue
             cal=matrix.calendar[matrix.calendar.sample_id.eq(sample['sample_id'])]
             for session in cfg['sessions']:
@@ -140,7 +141,7 @@ def run_final_integrity(rest,root,sdk_info,auth_info,cfg=None,now=None,external_
         # Phase 9: independent official CSVs; absence never becomes a same-provider substitute.
         external_fetcher=external_fetcher or fetch_official_daily
         info['external_validation']='ATTEMPTED; inspect independent TAIFEX diagnostics';write_info(path,info)
-        for sample in cfg['samples']:
+        for sample in matrix.eligible_samples:
             if sample['window_type']!='ordinary_early':continue
             matrix.verify(cfg);date=sample['trade_dates'][0]
             official,metadata=external_fetcher(date,path)

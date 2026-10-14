@@ -145,8 +145,8 @@ def test_external_definition_mismatch_not_fail_and_price_contradiction_fail():
     assert compare_external_field(2021,'2021-03-02','regular','high',10,None,True)['status']=='UNRESOLVED'
 
 
-def test_sample_plan_108_no_higher_timeframes_and_future_blocks():
-    cfg=load_final_config();matrix=FrozenSampleMatrix(cfg)
+def test_sample_plan_108_after_all_planned_windows_complete():
+    cfg=load_final_config();matrix=FrozenSampleMatrix(cfg,now="2027-01-01T00:00:00+08:00")
     assert len(matrix.plan)==108
     assert len([e for e in matrix.plan if e['role']=='repeat'])==6
     with pytest.raises(HistoricalFatalError,match='future'):matrix.require_completed(pd.Timestamp('2026-10-14T07:00:00+08:00'))
@@ -174,7 +174,7 @@ def runner_fixture(tmp_path,monkeypatch,external_bad=False,mutate=False):
     calendar_path=tmp_path/'synthetic_calendar.csv';cal.to_csv(calendar_path,index=False)
     cfg.update(calendar_file=str(calendar_path),calendar_sha256=hashlib.sha256(calendar_path.read_bytes()).hexdigest(),drive_root=str(tmp_path/'archives'),request_spacing_seconds=0)
     monkeypatch.setattr('src.final_integrity_runner.read_canonical_documentation',lambda cfg:(b'offline synthetic document',{}))
-    plan=FrozenSampleMatrix(cfg).plan;calls=[]
+    plan=FrozenSampleMatrix(cfg,now="2027-01-01T00:00:00+08:00").plan;calls=[]
     class API:
         def candles(self,**params):
             calls.append(params.copy())
@@ -237,8 +237,23 @@ def test_mutated_matrix_stops_whole_run_after_one_request(tmp_path,monkeypatch):
     assert (path/'diagnostics/fatal_traceback.txt').is_file()
 
 
-def test_future_matrix_blocks_before_first_api_call(tmp_path,monkeypatch):
+def test_current_year_runner_only_106_eligible_requests(tmp_path,monkeypatch):
     root,cfg,rest,calls,sdk,auth,official=runner_fixture(tmp_path,monkeypatch)
-    with pytest.raises(HistoricalFatalError,match='future'):
-        run_final_integrity(rest,root,sdk,auth,cfg,now=pd.Timestamp('2026-10-14T07:00:00+08:00'),external_fetcher=official)
-    assert not calls
+    path,summary=run_final_integrity(rest,root,sdk,auth,cfg,now=pd.Timestamp('2026-10-14T10:45:25+08:00'),external_fetcher=official)
+    assert len(calls)==106
+    assert not any(c['from']=='2026-11-02' for c in calls)
+    info=(path/'run_info.txt').read_text()
+    assert 'expected_logical_request_count=106' in info
+    assert 'sample_trade_date_count=185' in info
+    assert 'api_request_count_before_revision=0' in info
+    assert 'final_integrity_status="PASS WITH CAVEATS"' in info
+    yearly=pd.read_csv(path/'diagnostics/cross_year_yearly_summary.csv')
+    row=yearly[yearly.year.eq(2026)].iloc[0]
+    assert row['2026_late_year_status']=='NOT_YET_ELIGIBLE'
+    assert row.late_year_test_scope=='NOT TESTED — FUTURE WINDOW'
+    assert row.sampled_trade_dates==14 and row.classification=='PASS WITH CAVEATS'
+    assert '2026 ordinary_late not yet eligible as of run date.' in summary
+    assert 'Validated deterministic historical samples from 2017-06 through the latest completed eligible window as of the formal run timestamp.' in summary
+    assert 'validated full calendar year 2026' not in summary
+    samples=pd.read_csv(path/'diagnostics/predeclared_sample_matrix.csv')
+    assert len(samples)==30 and samples.included_in_formal_run.sum()==29
