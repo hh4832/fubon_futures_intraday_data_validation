@@ -26,6 +26,11 @@ for notebook in sorted((ROOT/'notebooks').glob('*.ipynb')):
         assert 'run_rollover_robustness(' in sources and 'MAX_PHASE' not in sources
         assert 'feature/rollover-robustness-validation' in sources
         assert 'cfg["window_from"]' not in sources and 'cfg["session"]' not in sources
+    elif notebook.name=='validate_fubon_futures_final_integrity.ipynb':
+        sources='\n'.join(c.source for c in notebook_cells)
+        assert 'run_final_integrity(' in sources and 'matrix.require_completed()' in sources
+        assert 'feature/final-cross-year-historical-integrity-validation' in sources
+        assert 'run_rollover_robustness(' not in sources
     for i,cell in enumerate(notebook_cells):
         ast.parse(cell.source,filename=f'{notebook.name} cell {i+1}')
         assert cell.execution_count is None and not cell.outputs

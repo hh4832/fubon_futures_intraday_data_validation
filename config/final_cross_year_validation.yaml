@@ -1,0 +1,587 @@
+validation_phase: final_cross_year_historical_integrity
+validation_stage: 2017_2026_stratified_validation
+baseline_commit: d5b7cf2d16b832c9cf6b86363e2016ebbc5386cf
+baseline_run: 20261014_073758_d5b7cf2d16b8
+product: TXF
+continuous_contract: 1!
+sessions:
+- regular
+- afterhours
+timeframe: 1
+fields: open,high,low,close,volume,average
+sort: asc
+calendar_file: config/final_cross_year_sample_calendar.csv
+calendar_sha256: dd32b4ff206faa21b45f8a5865c508c3cc3d9ad175c770d127542311ee187c9e
+documented_availability: 2017-06
+availability_dates:
+- '2017-06-01'
+- '2017-06-02'
+- '2017-06-03'
+- '2017-06-05'
+- '2017-06-06'
+availability_afterhours_dates:
+- '2017-06-02'
+- '2017-06-03'
+- '2017-06-05'
+- '2017-06-06'
+repeatability_years:
+- 2017
+- 2021
+- 2026
+minimum_adjustment_rows: 2
+adjustment_offset_atol: 1.0e-08
+adjustment_ratio_atol: 1.0e-10
+external_source_url: https://www.taifex.com.tw/cht/3/futDataDown
+external_definition_source: https://www.taifex.com.tw/cht/3/futDailyMarketReport
+samples:
+- sample_id: 2017_ordinary_early
+  year: 2017
+  window_type: ordinary_early
+  trade_dates:
+  - '2017-07-03'
+  - '2017-07-04'
+  - '2017-07-05'
+  - '2017-07-06'
+  - '2017-07-07'
+  window_from: '2017-07-03'
+  window_to: '2017-07-07'
+  old_contract: '201707'
+  new_contract: null
+  expiry_date: '2017-09-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2017Calendar_CH.pdf
+  fallback_reason: null
+- sample_id: 2017_june_rollover
+  year: 2017
+  window_type: june_rollover
+  trade_dates:
+  - '2017-09-14'
+  - '2017-09-15'
+  - '2017-09-18'
+  - '2017-09-19'
+  - '2017-09-20'
+  - '2017-09-21'
+  - '2017-09-22'
+  - '2017-09-25'
+  - '2017-09-26'
+  window_from: '2017-09-14'
+  window_to: '2017-09-26'
+  old_contract: '201709'
+  new_contract: '201710'
+  expiry_date: '2017-09-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2017Calendar_CH.pdf
+  fallback_reason: 2017 documented availability is month-only 2017-06; full June window
+    cannot be guaranteed before API; deterministic September fallback
+- sample_id: 2017_ordinary_late
+  year: 2017
+  window_type: ordinary_late
+  trade_dates:
+  - '2017-11-01'
+  - '2017-11-02'
+  - '2017-11-03'
+  - '2017-11-06'
+  - '2017-11-07'
+  window_from: '2017-11-01'
+  window_to: '2017-11-07'
+  old_contract: '201711'
+  new_contract: null
+  expiry_date: '2017-09-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2017Calendar_CH.pdf
+  fallback_reason: null
+- sample_id: 2018_ordinary_early
+  year: 2018
+  window_type: ordinary_early
+  trade_dates:
+  - '2018-03-01'
+  - '2018-03-02'
+  - '2018-03-05'
+  - '2018-03-06'
+  - '2018-03-07'
+  window_from: '2018-03-01'
+  window_to: '2018-03-07'
+  old_contract: '201803'
+  new_contract: null
+  expiry_date: '2018-06-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2018Calendar_CH.pdf
+  fallback_reason: null
+- sample_id: 2018_june_rollover
+  year: 2018
+  window_type: june_rollover
+  trade_dates:
+  - '2018-06-14'
+  - '2018-06-15'
+  - '2018-06-16'
+  - '2018-06-19'
+  - '2018-06-20'
+  - '2018-06-21'
+  - '2018-06-22'
+  - '2018-06-25'
+  - '2018-06-26'
+  window_from: '2018-06-14'
+  window_to: '2018-06-26'
+  old_contract: '201806'
+  new_contract: '201807'
+  expiry_date: '2018-06-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2018Calendar_CH.pdf
+  fallback_reason: null
+- sample_id: 2018_ordinary_late
+  year: 2018
+  window_type: ordinary_late
+  trade_dates:
+  - '2018-11-01'
+  - '2018-11-02'
+  - '2018-11-05'
+  - '2018-11-06'
+  - '2018-11-07'
+  window_from: '2018-11-01'
+  window_to: '2018-11-07'
+  old_contract: '201811'
+  new_contract: null
+  expiry_date: '2018-06-20'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/chinese/4/2018Calendar_CH.pdf
+  fallback_reason: null
+- sample_id: 2019_ordinary_early
+  year: 2019
+  window_type: ordinary_early
+  trade_dates:
+  - '2019-03-04'
+  - '2019-03-05'
+  - '2019-03-06'
+  - '2019-03-07'
+  - '2019-03-08'
+  window_from: '2019-03-04'
+  window_to: '2019-03-08'
+  old_contract: '201903'
+  new_contract: null
+  expiry_date: '2019-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2019Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2019_june_rollover
+  year: 2019
+  window_type: june_rollover
+  trade_dates:
+  - '2019-06-13'
+  - '2019-06-14'
+  - '2019-06-17'
+  - '2019-06-18'
+  - '2019-06-19'
+  - '2019-06-20'
+  - '2019-06-21'
+  - '2019-06-24'
+  - '2019-06-25'
+  window_from: '2019-06-13'
+  window_to: '2019-06-25'
+  old_contract: '201906'
+  new_contract: '201907'
+  expiry_date: '2019-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2019Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2019_ordinary_late
+  year: 2019
+  window_type: ordinary_late
+  trade_dates:
+  - '2019-11-01'
+  - '2019-11-04'
+  - '2019-11-05'
+  - '2019-11-06'
+  - '2019-11-07'
+  window_from: '2019-11-01'
+  window_to: '2019-11-07'
+  old_contract: '201911'
+  new_contract: null
+  expiry_date: '2019-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2019Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2020_ordinary_early
+  year: 2020
+  window_type: ordinary_early
+  trade_dates:
+  - '2020-03-02'
+  - '2020-03-03'
+  - '2020-03-04'
+  - '2020-03-05'
+  - '2020-03-06'
+  window_from: '2020-03-02'
+  window_to: '2020-03-06'
+  old_contract: '202003'
+  new_contract: null
+  expiry_date: '2020-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/eng/eng4/2020Calendar_ev2.pdf
+  fallback_reason: null
+- sample_id: 2020_june_rollover
+  year: 2020
+  window_type: june_rollover
+  trade_dates:
+  - '2020-06-11'
+  - '2020-06-12'
+  - '2020-06-15'
+  - '2020-06-16'
+  - '2020-06-17'
+  - '2020-06-18'
+  - '2020-06-19'
+  - '2020-06-22'
+  - '2020-06-23'
+  window_from: '2020-06-11'
+  window_to: '2020-06-23'
+  old_contract: '202006'
+  new_contract: '202007'
+  expiry_date: '2020-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/eng/eng4/2020Calendar_ev2.pdf
+  fallback_reason: null
+- sample_id: 2020_ordinary_late
+  year: 2020
+  window_type: ordinary_late
+  trade_dates:
+  - '2020-11-02'
+  - '2020-11-03'
+  - '2020-11-04'
+  - '2020-11-05'
+  - '2020-11-06'
+  window_from: '2020-11-02'
+  window_to: '2020-11-06'
+  old_contract: '202011'
+  new_contract: null
+  expiry_date: '2020-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/eng/eng4/2020Calendar_ev2.pdf
+  fallback_reason: null
+- sample_id: 2021_ordinary_early
+  year: 2021
+  window_type: ordinary_early
+  trade_dates:
+  - '2021-03-02'
+  - '2021-03-03'
+  - '2021-03-04'
+  - '2021-03-05'
+  - '2021-03-08'
+  window_from: '2021-03-02'
+  window_to: '2021-03-08'
+  old_contract: '202103'
+  new_contract: null
+  expiry_date: '2021-06-16'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2021Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2021_june_rollover
+  year: 2021
+  window_type: june_rollover
+  trade_dates:
+  - '2021-06-09'
+  - '2021-06-10'
+  - '2021-06-11'
+  - '2021-06-15'
+  - '2021-06-16'
+  - '2021-06-17'
+  - '2021-06-18'
+  - '2021-06-21'
+  - '2021-06-22'
+  window_from: '2021-06-09'
+  window_to: '2021-06-22'
+  old_contract: '202106'
+  new_contract: '202107'
+  expiry_date: '2021-06-16'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2021Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2021_ordinary_late
+  year: 2021
+  window_type: ordinary_late
+  trade_dates:
+  - '2021-11-01'
+  - '2021-11-02'
+  - '2021-11-03'
+  - '2021-11-04'
+  - '2021-11-05'
+  window_from: '2021-11-01'
+  window_to: '2021-11-05'
+  old_contract: '202111'
+  new_contract: null
+  expiry_date: '2021-06-16'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2021Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2022_ordinary_early
+  year: 2022
+  window_type: ordinary_early
+  trade_dates:
+  - '2022-03-01'
+  - '2022-03-02'
+  - '2022-03-03'
+  - '2022-03-04'
+  - '2022-03-07'
+  window_from: '2022-03-01'
+  window_to: '2022-03-07'
+  old_contract: '202203'
+  new_contract: null
+  expiry_date: '2022-06-15'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2022Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2022_june_rollover
+  year: 2022
+  window_type: june_rollover
+  trade_dates:
+  - '2022-06-09'
+  - '2022-06-10'
+  - '2022-06-13'
+  - '2022-06-14'
+  - '2022-06-15'
+  - '2022-06-16'
+  - '2022-06-17'
+  - '2022-06-20'
+  - '2022-06-21'
+  window_from: '2022-06-09'
+  window_to: '2022-06-21'
+  old_contract: '202206'
+  new_contract: '202207'
+  expiry_date: '2022-06-15'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2022Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2022_ordinary_late
+  year: 2022
+  window_type: ordinary_late
+  trade_dates:
+  - '2022-11-01'
+  - '2022-11-02'
+  - '2022-11-03'
+  - '2022-11-04'
+  - '2022-11-07'
+  window_from: '2022-11-01'
+  window_to: '2022-11-07'
+  old_contract: '202211'
+  new_contract: null
+  expiry_date: '2022-06-15'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2022Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2023_ordinary_early
+  year: 2023
+  window_type: ordinary_early
+  trade_dates:
+  - '2023-03-01'
+  - '2023-03-02'
+  - '2023-03-03'
+  - '2023-03-06'
+  - '2023-03-07'
+  window_from: '2023-03-01'
+  window_to: '2023-03-07'
+  old_contract: '202303'
+  new_contract: null
+  expiry_date: '2023-06-21'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2023Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2023_june_rollover
+  year: 2023
+  window_type: june_rollover
+  trade_dates:
+  - '2023-06-15'
+  - '2023-06-16'
+  - '2023-06-19'
+  - '2023-06-20'
+  - '2023-06-21'
+  - '2023-06-26'
+  - '2023-06-27'
+  - '2023-06-28'
+  - '2023-06-29'
+  window_from: '2023-06-15'
+  window_to: '2023-06-29'
+  old_contract: '202306'
+  new_contract: '202307'
+  expiry_date: '2023-06-21'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2023Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2023_ordinary_late
+  year: 2023
+  window_type: ordinary_late
+  trade_dates:
+  - '2023-11-01'
+  - '2023-11-02'
+  - '2023-11-03'
+  - '2023-11-06'
+  - '2023-11-07'
+  window_from: '2023-11-01'
+  window_to: '2023-11-07'
+  old_contract: '202311'
+  new_contract: null
+  expiry_date: '2023-06-21'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2023Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2024_ordinary_early
+  year: 2024
+  window_type: ordinary_early
+  trade_dates:
+  - '2024-03-01'
+  - '2024-03-04'
+  - '2024-03-05'
+  - '2024-03-06'
+  - '2024-03-07'
+  window_from: '2024-03-01'
+  window_to: '2024-03-07'
+  old_contract: '202403'
+  new_contract: null
+  expiry_date: '2024-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2024Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2024_june_rollover
+  year: 2024
+  window_type: june_rollover
+  trade_dates:
+  - '2024-06-13'
+  - '2024-06-14'
+  - '2024-06-17'
+  - '2024-06-18'
+  - '2024-06-19'
+  - '2024-06-20'
+  - '2024-06-21'
+  - '2024-06-24'
+  - '2024-06-25'
+  window_from: '2024-06-13'
+  window_to: '2024-06-25'
+  old_contract: '202406'
+  new_contract: '202407'
+  expiry_date: '2024-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2024Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2024_ordinary_late
+  year: 2024
+  window_type: ordinary_late
+  trade_dates:
+  - '2024-11-01'
+  - '2024-11-04'
+  - '2024-11-05'
+  - '2024-11-06'
+  - '2024-11-07'
+  window_from: '2024-11-01'
+  window_to: '2024-11-07'
+  old_contract: '202411'
+  new_contract: null
+  expiry_date: '2024-06-19'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2024Calendar_cv1.pdf
+  fallback_reason: null
+- sample_id: 2025_ordinary_early
+  year: 2025
+  window_type: ordinary_early
+  trade_dates:
+  - '2025-03-03'
+  - '2025-03-04'
+  - '2025-03-05'
+  - '2025-03-06'
+  - '2025-03-07'
+  window_from: '2025-03-03'
+  window_to: '2025-03-07'
+  old_contract: '202503'
+  new_contract: null
+  expiry_date: '2025-06-18'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2025Calendar_cv2.pdf
+  fallback_reason: null
+- sample_id: 2025_june_rollover
+  year: 2025
+  window_type: june_rollover
+  trade_dates:
+  - '2025-06-12'
+  - '2025-06-13'
+  - '2025-06-16'
+  - '2025-06-17'
+  - '2025-06-18'
+  - '2025-06-19'
+  - '2025-06-20'
+  - '2025-06-23'
+  - '2025-06-24'
+  window_from: '2025-06-12'
+  window_to: '2025-06-24'
+  old_contract: '202506'
+  new_contract: '202507'
+  expiry_date: '2025-06-18'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2025Calendar_cv2.pdf
+  fallback_reason: null
+- sample_id: 2025_ordinary_late
+  year: 2025
+  window_type: ordinary_late
+  trade_dates:
+  - '2025-11-03'
+  - '2025-11-04'
+  - '2025-11-05'
+  - '2025-11-06'
+  - '2025-11-07'
+  window_from: '2025-11-03'
+  window_to: '2025-11-07'
+  old_contract: '202511'
+  new_contract: null
+  expiry_date: '2025-06-18'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2025Calendar_cv2.pdf
+  fallback_reason: null
+- sample_id: 2026_ordinary_early
+  year: 2026
+  window_type: ordinary_early
+  trade_dates:
+  - '2026-03-02'
+  - '2026-03-03'
+  - '2026-03-04'
+  - '2026-03-05'
+  - '2026-03-06'
+  window_from: '2026-03-02'
+  window_to: '2026-03-06'
+  old_contract: '202603'
+  new_contract: null
+  expiry_date: '2026-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2026Calendar.pdf
+  fallback_reason: null
+- sample_id: 2026_june_rollover
+  year: 2026
+  window_type: june_rollover
+  trade_dates:
+  - '2026-06-11'
+  - '2026-06-12'
+  - '2026-06-15'
+  - '2026-06-16'
+  - '2026-06-17'
+  - '2026-06-18'
+  - '2026-06-22'
+  - '2026-06-23'
+  - '2026-06-24'
+  window_from: '2026-06-11'
+  window_to: '2026-06-24'
+  old_contract: '202606'
+  new_contract: '202607'
+  expiry_date: '2026-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2026Calendar.pdf
+  fallback_reason: null
+- sample_id: 2026_ordinary_late
+  year: 2026
+  window_type: ordinary_late
+  trade_dates:
+  - '2026-11-02'
+  - '2026-11-03'
+  - '2026-11-04'
+  - '2026-11-05'
+  - '2026-11-06'
+  window_from: '2026-11-02'
+  window_to: '2026-11-06'
+  old_contract: '202611'
+  new_contract: null
+  expiry_date: '2026-06-17'
+  expiry_source: https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06
+  calendar_source: https://www.taifex.com.tw/file/taifex/CHINESE/4/2026Calendar.pdf
+  fallback_reason: null

@@ -36,3 +36,10 @@ Observed transition、expiry/volume consistency 與 provider rule proof 必須�
 未解釋的 partial-session mixing、缺失 identity、OHLC transformation 或不可重建 boundary 阻擋。
 所有 sampled construction operationally traceable 可保留／進另行 final integrity validation；不要求識別私有演算法名稱。
 此六窗口結論不可外推全歷史，不執行 final integrity、external price validation、策略或 returns。
+
+## Final cross-year historical integrity phase
+獨立 final runner 只執行 frozen 2017–2026 三窗口矩陣；190 primary dates，加bounded availability與六個 repeats，共108 logical historical 1m requests。
+官方 calendar/expiry/session exceptions 在首次API前固定並hash，每request前核對；未完成的future窗口阻擋，不改樣本。
+同源yearly rollover確認不是重新discovery；internal aggregation不查provider higher timeframes。
+Independent TAIFEX daily spot checks只比definition-compatible欄位；NOT COMPARABLE不是FAIL，但無compatible external證據不能promote。
+任何year blocker、repeatability mismatch、availability未界定或external明確矛盾都阻擋canonical source推薦；最終data PASS不等於策略有效。

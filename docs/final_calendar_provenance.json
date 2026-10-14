@@ -1,0 +1,57 @@
+[
+  {
+    "year": 2017,
+    "source_url": "https://www.taifex.com.tw/chinese/4/2017Calendar_CH.pdf",
+    "sha256": "83b6c576f36d7eb8a0cc34ff0f751f36a64ad0090f2d0d3c3df3891eca41acb8"
+  },
+  {
+    "year": 2018,
+    "source_url": "https://www.taifex.com.tw/chinese/4/2018Calendar_CH.pdf",
+    "sha256": "f5a878eb1f75a53b9342f41df0185254eff201c8b818c9095acdbbb1d1e9a81f"
+  },
+  {
+    "year": 2019,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2019Calendar_cv1.pdf",
+    "sha256": "24b79aa1262aa485db073e073082ddf5eb04600b096b1480d5c74f027c61b98e"
+  },
+  {
+    "year": 2020,
+    "source_url": "https://www.taifex.com.tw/file/taifex/eng/eng4/2020Calendar_ev2.pdf",
+    "sha256": "20a487cf51d7de861189284c7101488780af202b84d51147728718ce90320052"
+  },
+  {
+    "year": 2021,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2021Calendar_cv1.pdf",
+    "sha256": "4f37686f7127445d18bf7345e680e8acac6573d461605e9ed4d5cc993694c89a"
+  },
+  {
+    "year": 2022,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2022Calendar_cv1.pdf",
+    "sha256": "c196627d0c2dd9588d2c05b637f7e32b2245222663791d004d4a9f7fc289552b"
+  },
+  {
+    "year": 2023,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2023Calendar_cv1.pdf",
+    "sha256": "2025a5f709f3e87e47e1e67f412dd359f2d81b9d9686dbf9f9bc257ce09b9ef5"
+  },
+  {
+    "year": 2024,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2024Calendar_cv1.pdf",
+    "sha256": "1c3f321159d3a08259d0b5a2fdb373b49eb303747953ece0353e573ba8d182ac"
+  },
+  {
+    "year": 2025,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2025Calendar_cv2.pdf",
+    "sha256": "e1462035aecee07cbcc38562c8d8620c8501e7c7df6756144da85ba3d1655a6a"
+  },
+  {
+    "year": 2026,
+    "source_url": "https://www.taifex.com.tw/file/taifex/CHINESE/4/2026Calendar.pdf",
+    "sha256": "8619b50dd46e4c2b817010cfa0774de3a2301181babf0117b1d28755df09d475"
+  },
+  {
+    "source_url": "https://www.taifex.com.tw/cht/5/futIndxFSP?commodityIds=1&start_year=2017&start_month=09&end_year=2026&end_month=06",
+    "sha256": "b9c1bb343833ab70c21093bcff2bcc3cd4172daa2c640fe61c64d4045ef6c2e0",
+    "purpose": "Verified exact TX monthly final settlement dates"
+  }
+]

@@ -296,3 +296,15 @@ Fatal handling 現在保留 `diagnostics/fatal_traceback.txt`、`fatal_error_typ
 Afterhours 普通 bar 仍用 `[afterhours_open, afterhours_close)`；只有 `timestamp == afterhours_close` 另行歸屬同一已來源確認的 night window，標記 `terminal_boundary_bar=True`，trade_date沿用該window的next regular trade_date。05:01、其他未排程close及開盤前資料不納入；若close同時是另一session的open則停止，避免猜測。Regular/intraday policy不改，raw timestamp/OHLCVA/identity不改，不補資料或刪bars。這是historical provider terminal timestamp歸屬，並不證實closing auction。
 
 `python -m scripts.replay_terminal_boundary --archive EXISTING_ARCHIVE --output NEW_REPLAY_DIR` 僅讀202512→202601 night三份既存parquet及canonical snapshots，另存 `diagnostics/terminal_boundary_replay.csv`、`diagnostics/terminal_boundary_volume_reconciliation.csv`、`terminal_boundary_summary.md`、input validation與replay diagnostics。檢查逐barexact comparisons、adjustment/rule interpretations、transition boundaries不变；用其他五sample已存diagnostics重評aggregate，不宣稱重新執行全部formal run。原archive不可覆寫；API calls=0。
+
+## Final Cross-Year Historical Integrity Validation
+
+獨立入口 `src.final_integrity_runner.run_final_integrity`，baseline `d5b7cf2`；不呼叫前階段 runners。[設計與官方來源](docs/final_cross_year_validation_design.md)說明30個預定窗口、190個主樣本交易日、2017起點probe、2018補班週六與2024休市例外，以及外部比較定義。
+
+`config/final_cross_year_validation.yaml` 與 `config/final_cross_year_sample_calendar.csv` 在live requests前固定。`python -m scripts.freeze_final_samples --output NEW_DIR` 產生 predeclared sample matrix、query plan、calendar snapshot與 SHA256/readiness。預期108 logical requests：100 primary、6 repeatability、2 availability；sequential、bounded retries，全部historical TXF 1m。
+
+**2026年11月預定窗口尚未完成時，final run會在第一個API前停止。** 不以其他窗口取代；最早全窗口結束時間為2026-11-06 13:45 Asia/Taipei。此implementation與synthetic tests不等於formal PASS。
+
+Colab：[final integrity notebook](https://colab.research.google.com/github/hh4832/fubon_futures_intraday_data_validation/blob/feature/final-cross-year-historical-integrity-validation/notebooks/validate_fubon_futures_final_integrity.ipynb)。Clean feature checkout → pytest → freeze/readiness → SDK/auth → historical retrieval → per-year diagnostics／annual exact rollover → six repeats → internal5/15/60 aggregation → independent officialTAIFEX spot checks → yearly/global A–X及20問報告。
+
+所有raw attempts與normalized parquet保存於新Drive timestamp_commit archive。Global invalid rows parquet保留原值；missing不是zero/no-trade；terminal bar不刪；不跨月份計算return、不調整continuous價格。External download不可用或schema不符時保留error/raw且UNRESOLVED，不以same-provider比較替代。Close/volume定義未能對齊則NOT COMPARABLE；compatible high/low缺乏證據或明確矛盾會阻擋。
